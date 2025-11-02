@@ -7,6 +7,8 @@ import {
   Alert,
   View,
   RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -110,10 +112,16 @@ export default function DashboardScreen() {
   const stats = getTotalStats();
 
   return (
-    <ScrollView
-      style={[styles.container, isDark && styles.containerDark]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
+      <ScrollView
+        style={[styles.container, isDark && styles.containerDark]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        keyboardShouldPersistTaps="handled"
+      >
       {/* Header with days remaining */}
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.headerTitle}>
@@ -298,6 +306,7 @@ export default function DashboardScreen() {
 
       <View style={styles.bottomPadding} />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
