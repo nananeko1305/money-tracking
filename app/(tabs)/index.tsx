@@ -19,6 +19,7 @@ import {
   addExpense,
   deleteCategory,
   getDaysUntilReset,
+  exportData,
 } from '@/services/storage';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -84,6 +85,17 @@ export default function DashboardScreen() {
     await loadCategories();
   };
 
+  const handleExport = async () => {
+    try {
+      const ok = await exportData();
+      if (!ok) {
+        Alert.alert('Info', 'Deljenje nije dostupno na ovom uređaju');
+      }
+    } catch {
+      Alert.alert('Greška', 'Izvoz podataka nije uspeo');
+    }
+  };
+
   const handleDeleteCategory = (category: Category) => {
     Alert.alert(
       'Obriši kategoriju',
@@ -132,6 +144,11 @@ export default function DashboardScreen() {
             {daysRemaining} {daysRemaining === 1 ? 'dan' : 'dana'} do reseta
           </ThemedText>
         </ThemedView>
+        <TouchableOpacity style={styles.exportButton} onPress={handleExport}>
+          <ThemedText style={styles.exportButtonText}>
+            ⬆ Izvezi podatke (za Flutter)
+          </ThemedText>
+        </TouchableOpacity>
       </ThemedView>
 
       {/* Total Stats */}
@@ -334,6 +351,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4ECDC4',
     textAlign: 'center',
+  },
+  exportButton: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4ECDC4',
+    alignItems: 'center',
+  },
+  exportButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4ECDC4',
   },
   statsContainer: {
     marginHorizontal: 20,

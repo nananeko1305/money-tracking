@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { AppData, Category, MonthlyReport } from '@/types/budget';
 
 const STORAGE_KEY = '@budget_app_data';
@@ -171,4 +173,69 @@ export function getDaysUntilReset(): number {
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const diff = nextMonth.getTime() - now.getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+// --- Export for migration to the Flutter version ---
+
+// Convert a category to the Flutter data shape. The Flutter app derives "spent"
+// from a transaction list, so the accumulated "spent" is turned into a single
+// legacy transaction to preserve the value across the migration.
+function toFlutterCategory(cat: Category) {
+  const transactions =
+    cat.spent > 0
+      ? [
+          {
+            id: `${cat.id}-legacy`,
+            amount: cat.spent,
+            description: 'Prethodna potrošnja',
+            date: cat.createdAt || new Date().toISOString(),
+          },
+        ]
+      : [];
+  return {
+    id: cat.id,
+    name: cat.name,
+    budget: cat.budget,
+    spent: cat.spent,
+    color: cat.color,
+    createdAt: cat.createdAt,
+    transactions,
+  };
+}
+
+// Export all data as a Flutter-compatible JSON file and open the share sheet.
+// Returns false if sharing is unavailable on the device.
+export async function exportData(): Promise<boolean> {
+  const data = await loadData();
+
+  const flutterData = {
+    currentCategories: data.currentCategories.map(toFlutterCategory),
+    monthlyReports: data.monthlyReports.map((report) => ({
+      id: report.id,
+      month: report.month,
+      categories: report.categories.map(toFlutterCategory),
+      totalBudget: report.totalBudget,
+      totalSpent: report.totalSpent,
+      totalRemaining: report.totalRemaining,
+      savedAt: report.savedAt,
+    })),
+    lastResetDate: data.lastResetDate,
+  };
+
+  const json = JSON.stringify(flutterData, null, 2);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const file = new File(Paths.cache, `money-tracking-backup-${timestamp}.json`);
+  file.create({ overwrite: true });
+  file.write(json);
+
+  if (!(await Sharing.isAvailableAsync())) {
+    return false;
+  }
+
+  await Sharing.shareAsync(file.uri, {
+    mimeType: 'application/json',
+    dialogTitle: 'Izvezi podatke (Money Tracking)',
+    UTI: 'public.json',
+  });
+  return true;
 }
