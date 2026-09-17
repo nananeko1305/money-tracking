@@ -1,50 +1,53 @@
 # Money Tracking (Flutter)
 
-Aplikacija za praćenje mesečnog budžeta, napisana u Flutter-u. Prepisana iz
-ranije Expo/React Native verzije — ona je sačuvana u git grani `expo-legacy`.
+A monthly budget tracking app built with Flutter. Rewritten from an earlier
+Expo/React Native version, which is preserved on the `expo-legacy` branch.
 
-## Funkcionalnosti
+## Features
 
-- **Budžet** — kategorije sa budžetom i potrošnjom, progress barovi, ukupne
-  cifre, dani do reseta (u dinarima).
-- **Izveštaji** — mesečna arhiva (poslednjih 12 meseci), automatski se čuva
-  svakog 1. u mesecu.
-- **Istorija transakcija** — svaki trošak se pamti pojedinačno (iznos, opis,
-  datum); tapni na kategoriju da vidiš listu, prevuci ulevo za brisanje.
-- **Izmena kategorije** — edit dugme za izmenu naziva i budžeta.
-- **Export / Import** — u draweru; backup u JSON fajl i uvoz nazad.
-- **Drawer** — navigacija + sve opcije (izvoz/uvoz, jezik, tema).
-- **Teme** — svetla i tamna, zeleno-zlatna paleta (zeleno = papirni novac,
-  zlatno = zlato); izbor Sistemska / Svetla / Tamna, pamti se.
-- **Jezici** — srpski (latinica) i engleski, prekidač u draweru, pamti se.
+- **Budget** — categories with budget and spending, progress bars, totals and
+  days until reset (in dinars).
+- **Reports** — monthly archive (last 12 months), saved automatically on the
+  1st of each month.
+- **Transaction history** — every expense is stored individually (amount,
+  description, date); tap a category to see the list, swipe left to delete.
+- **Category editing** — edit button to change a category's name and budget.
+- **Export / Import** — from the drawer; back up to a JSON file and import it
+  back.
+- **Drawer** — navigation plus all options (export/import, language, theme).
+- **Themes** — light and dark, green/gold palette (green like paper money,
+  gold like gold); System / Light / Dark, remembered between launches.
+- **Languages** — Serbian (Latin) and English, toggled from the drawer and
+  remembered.
 
-Podaci i podešavanja (jezik, tema) se čuvaju lokalno preko
+App data and settings (language, theme) are stored locally via
 `shared_preferences`.
 
-## Struktura
+## Structure
 
 ```
 lib/
-├── main.dart                       # App root, navigacija, export/import meni
-├── theme.dart                      # Boje i teme
-├── format.dart                     # Formatiranje valute i datuma
-├── models/budget.dart             # Category, Transaction, MonthlyReport, AppData
+├── main.dart                        # App root, navigation, drawer, settings
+├── app_scope.dart                   # InheritedWidget: language, theme, strings
+├── theme.dart                       # Color palette (ThemeExtension) and themes
+├── l10n/strings.dart                # Localized strings + locale-aware formatting
+├── models/budget.dart               # Category, Transaction, MonthlyReport, AppData
 ├── services/
-│   ├── storage.dart               # Perzistencija + mesečni reset
-│   └── backup.dart                # Export (share) / import (file picker)
+│   ├── storage.dart                 # Persistence + monthly reset
+│   └── backup.dart                  # Export (share) / import (file picker)
 ├── screens/
-│   ├── dashboard_screen.dart      # Ekran "Budžet"
-│   ├── reports_screen.dart        # Ekran "Izveštaji"
-│   └── category_detail_screen.dart # Istorija transakcija
+│   ├── dashboard_screen.dart        # "Budget" screen
+│   ├── reports_screen.dart          # "Reports" screen
+│   └── category_detail_screen.dart  # Transaction history
 └── widgets/
-    └── category_card.dart         # Kartica kategorije
+    └── category_card.dart           # Category card
 ```
 
-## Pokretanje
+## Running
 
 ```bash
 flutter pub get
-flutter run                    # na povezanom uređaju / emulatoru
-flutter build apk --release    # release APK za Android
-flutter test                   # testovi
+flutter run                    # on a connected device / emulator
+flutter build apk --release    # release APK for Android
+flutter test                   # tests
 ```
