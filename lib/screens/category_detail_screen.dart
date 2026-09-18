@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
-import '../models/budget.dart';
-import '../services/storage.dart';
+import '../models/category.dart';
+import '../models/transaction.dart';
+import '../services/budget_repository.dart';
 import '../theme.dart';
 
 /// Shows the transaction history for one category and allows deleting
 /// individual transactions.
 class CategoryDetailScreen extends StatefulWidget {
-  final BudgetStorage storage;
+  final BudgetRepository storage;
   final String categoryId;
 
   const CategoryDetailScreen({

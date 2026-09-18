@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
-import '../l10n/strings.dart';
-import '../models/budget.dart';
-import '../services/storage.dart';
+import '../models/category.dart';
+import '../services/budget_repository.dart';
 import '../theme.dart';
 import '../widgets/category_card.dart';
+import '../widgets/category_form_dialog.dart';
+import '../widgets/confirm_dialog.dart';
+import '../widgets/days_banner.dart';
+import '../widgets/totals_card.dart';
 import 'category_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final BudgetStorage storage;
+  final BudgetRepository storage;
 
   const DashboardScreen({super.key, required this.storage});
 
@@ -42,14 +45,14 @@ class DashboardScreenState extends State<DashboardScreen> {
   double get _totalSpent => _categories.fold(0.0, (s, c) => s + c.spent);
 
   Future<void> _addCategory() async {
-    final result = await _showCategoryDialog();
+    final result = await showCategoryFormDialog(context);
     if (result == null) return;
     await widget.storage.addCategory(result.name, result.budget);
     await reload();
   }
 
   Future<void> _editCategory(Category category) async {
-    final result = await _showCategoryDialog(existing: category);
+    final result = await showCategoryFormDialog(context, existing: category);
     if (result == null) return;
     await widget.storage
         .updateCategory(category.id, name: result.name, budget: result.budget);
@@ -58,26 +61,15 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _deleteCategory(Category category) async {
     final t = AppScope.of(context).strings;
-    final pal = palette(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(t.deleteCategoryTitle),
-        content: Text(t.deleteCategoryMsg(category.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: pal.danger),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(t.delete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: t.deleteCategoryTitle,
+      message: t.deleteCategoryMsg(category.name),
+      confirmLabel: t.delete,
+      cancelLabel: t.cancel,
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await widget.storage.deleteCategory(category.id);
     await reload();
   }
@@ -100,64 +92,6 @@ class DashboardScreenState extends State<DashboardScreen> {
     await reload();
   }
 
-  Future<_CategoryFormResult?> _showCategoryDialog({Category? existing}) {
-    final t = AppScope.of(context).strings;
-    final nameController = TextEditingController(text: existing?.name ?? '');
-    final budgetController = TextEditingController(
-        text: existing != null ? t.amount(existing.budget) : '');
-
-    return showDialog<_CategoryFormResult>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? t.newCategory : t.editCategory),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: t.name,
-                hintText: t.nameHint,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: budgetController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: t.budget.replaceAll(':', ''),
-                hintText: t.budgetHint,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(t.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final budget = double.tryParse(
-                  budgetController.text.trim().replaceAll(',', '.'));
-              if (name.isEmpty || budget == null || budget <= 0) {
-                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                  content: Text(t.invalidCategory),
-                ));
-                return;
-              }
-              Navigator.pop(ctx, _CategoryFormResult(name, budget));
-            },
-            child: Text(t.save),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = AppScope.of(context).strings;
@@ -174,12 +108,10 @@ class DashboardScreenState extends State<DashboardScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          _DaysBanner(text: t.daysUntilReset(_daysRemaining), pal: pal),
+          DaysBanner(text: t.daysUntilReset(_daysRemaining)),
           const SizedBox(height: 16),
           if (_categories.isNotEmpty) ...[
-            _TotalsCard(
-              t: t,
-              pal: pal,
+            TotalsCard(
               totalBudget: _totalBudget,
               totalSpent: _totalSpent,
               totalRemaining: totalRemaining,
@@ -210,97 +142,6 @@ class DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _CategoryFormResult {
-  final String name;
-  final double budget;
-  const _CategoryFormResult(this.name, this.budget);
-}
-
-class _DaysBanner extends StatelessWidget {
-  final String text;
-  final AppPalette pal;
-  const _DaysBanner({required this.text, required this.pal});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: pal.bannerBg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.hourglass_bottom, size: 18, color: pal.bannerFg),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: pal.bannerFg,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TotalsCard extends StatelessWidget {
-  final AppStrings t;
-  final AppPalette pal;
-  final double totalBudget;
-  final double totalSpent;
-  final double totalRemaining;
-
-  const _TotalsCard({
-    required this.t,
-    required this.pal,
-    required this.totalBudget,
-    required this.totalSpent,
-    required this.totalRemaining,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: pal.subtleFill,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: pal.cardBorder),
-      ),
-      child: Column(
-        children: [
-          _row(t.totalBudget, t.din(totalBudget), null),
-          const SizedBox(height: 8),
-          _row(t.totalSpent, t.din(totalSpent), pal.spent),
-          const SizedBox(height: 8),
-          _row(
-            t.remaining,
-            t.din(totalRemaining),
-            totalRemaining < 0 ? pal.danger : pal.positive,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, String value, Color? color) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14)),
-        Text(value,
-            style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600, color: color)),
-      ],
     );
   }
 }
