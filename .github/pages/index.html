@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -105,6 +105,14 @@
       border-radius: 10px;
       padding: 12px 14px;
     }
+    .checksum {
+      margin: 14px 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+      word-break: break-all;
+    }
+    .checksum code { font-size: 10.5px; }
   </style>
 </head>
 <body>
@@ -112,7 +120,7 @@
     <div class="header">
       <div class="icon">📈</div>
       <h1>Money Tracking</h1>
-      <p>Praćenje mesečnog budžeta</p>
+      <p>Monthly budget tracking</p>
     </div>
     <div class="body">
       <div class="meta">
@@ -121,16 +129,17 @@
         <span class="chip">__DATE__</span>
       </div>
 
-      <a class="btn" href="__DOWNLOAD_URL__" download>⬇️ Preuzmi APK</a>
+      <a class="btn" href="__DOWNLOAD_URL__" download>⬇️ Download APK</a>
 
-      <div class="qr"><img src="qr.png" alt="QR kod za preuzimanje" /></div>
-      <p class="hint">Skeniraj QR kod telefonom za direktno preuzimanje</p>
+      <div class="qr"><img src="qr.png" alt="Download QR code" /></div>
+      <p class="hint">Scan the QR code with your phone to download directly</p>
 
       <div class="note">
-        <strong>Instalacija:</strong> otvori preuzeti <code>.apk</code> fajl na Android
-        telefonu i dozvoli instalaciju iz nepoznatih izvora ako te sistem pita.
-        APK je potpisan debug ključem (za lično korišćenje / sideload).
+        <strong>Installation:</strong> open the downloaded <code>.apk</code> file on
+        your Android phone and allow installation from unknown sources if prompted.
       </div>
+
+      <p class="checksum">SHA-256<br /><code>__SHA256__</code></p>
     </div>
   </main>
 </body>
