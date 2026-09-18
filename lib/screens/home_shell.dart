@@ -4,11 +4,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../app_scope.dart';
 import '../services/backup.dart';
 import '../services/budget_repository.dart';
+import '../services/onboarding_store.dart';
 import '../services/storage_permission.dart';
 import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/confirm_dialog.dart';
 import 'dashboard_screen.dart';
+import 'onboarding_screen.dart';
 import 'reports_screen.dart';
 
 /// The main app shell: bottom navigation between the dashboard and reports,
@@ -25,6 +27,7 @@ class _HomeShellState extends State<HomeShell> {
   final BackupService _backup = BackupService();
   final StoragePermission _permission = StoragePermission();
   final UpdateChecker _updateChecker = UpdateChecker();
+  final OnboardingStore _onboarding = OnboardingStore();
 
   int _index = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey =
@@ -39,9 +42,21 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Future<void> _runStartupChecks() async {
+    if (!await _onboarding.isSeen()) {
+      if (!mounted) return;
+      await _showOnboarding();
+      await _onboarding.markSeen();
+    }
+    if (!mounted) return;
     await _maybeOfferRestore();
     if (!mounted) return;
     await _maybeOfferUpdate();
+  }
+
+  Future<void> _showOnboarding() {
+    return Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+    );
   }
 
   /// Since the app is not on any store, it checks GitHub Releases and offers to
@@ -193,6 +208,7 @@ class _HomeShellState extends State<HomeShell> {
         onSelect: _select,
         onExport: _handleExport,
         onImport: _handleImport,
+        onHowItWorks: _showOnboarding,
       ),
       body: IndexedStack(
         index: _index,
