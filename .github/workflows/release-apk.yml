@@ -76,7 +76,12 @@ jobs:
             echo "No keystore secret set — using debug signing."
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          # Strip any whitespace/newlines (wrapped base64) before decoding.
+          echo "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > android/app/upload-keystore.jks
+          if [ ! -s android/app/upload-keystore.jks ]; then
+            echo "Decoded keystore is empty — check the ANDROID_KEYSTORE_BASE64 secret."
+            exit 1
+          fi
           cat > android/key.properties <<EOF
           storeFile=upload-keystore.jks
           storePassword=$STORE_PASSWORD
