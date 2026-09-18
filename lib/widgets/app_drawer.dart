@@ -12,6 +12,7 @@ class AppDrawer extends StatelessWidget {
   final ValueChanged<int> onSelect;
   final Future<void> Function() onExport;
   final Future<void> Function() onImport;
+  final VoidCallback onHowItWorks;
 
   const AppDrawer({
     super.key,
@@ -19,6 +20,7 @@ class AppDrawer extends StatelessWidget {
     required this.onSelect,
     required this.onExport,
     required this.onImport,
+    required this.onHowItWorks,
   });
 
   @override
@@ -76,6 +78,15 @@ class AppDrawer extends StatelessWidget {
             _sectionLabel(t.settingsSection),
             _languageControl(context, scope, pal),
             _themeControl(context, scope, t, pal),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: Text(t.howItWorks),
+              onTap: () {
+                Navigator.pop(context);
+                onHowItWorks();
+              },
+            ),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
