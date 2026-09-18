@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:budget_tracker/main.dart';
+import 'package:budget_tracker/app.dart';
 
 void main() {
   testWidgets('App renders the dashboard title', (WidgetTester tester) async {
