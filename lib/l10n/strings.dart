@@ -61,6 +61,16 @@ class AppStrings {
     importSuccess: 'Podaci su uspešno uvezeni',
     importInvalid: 'Neispravan backup fajl',
     shareUnavailable: 'Deljenje nije dostupno na ovom uređaju',
+    exportSaved: 'Sačuvano u fasciklu Download/MoneyTracking',
+    exportFailed: 'Čuvanje nije uspelo',
+    storagePermissionDenied: 'Pristup fajlovima je odbijen',
+    restorePromptTitle: 'Vrati podatke',
+    restorePromptMsg:
+        'Ako imaš sačuvan backup na telefonu, mogu da ga pronađem i uvezem. Da proverim?',
+    check: 'Proveri',
+    notNow: 'Ne sada',
+    restoreFoundTitle: 'Pronađen backup',
+    noBackupsFound: 'Nema sačuvanih backup-ova',
     monthNames: _monthsSr,
     currency: 'din',
   );
@@ -113,6 +123,16 @@ class AppStrings {
     importSuccess: 'Data imported successfully',
     importInvalid: 'Invalid backup file',
     shareUnavailable: 'Sharing is not available on this device',
+    exportSaved: 'Saved to Download/MoneyTracking',
+    exportFailed: 'Save failed',
+    storagePermissionDenied: 'File access was denied',
+    restorePromptTitle: 'Restore data',
+    restorePromptMsg:
+        'If you have a saved backup on your phone, I can find and import it. Check now?',
+    check: 'Check',
+    notNow: 'Not now',
+    restoreFoundTitle: 'Backup found',
+    noBackupsFound: 'No saved backups found',
     monthNames: _monthsEn,
     currency: 'din',
   );
@@ -175,6 +195,16 @@ class AppStrings {
   final String importInvalid;
 
   final String shareUnavailable;
+  // Backup save / restore
+  final String exportSaved;
+  final String exportFailed;
+  final String storagePermissionDenied;
+  final String restorePromptTitle;
+  final String restorePromptMsg;
+  final String check;
+  final String notNow;
+  final String restoreFoundTitle;
+  final String noBackupsFound;
 
   final List<String> monthNames;
 
@@ -228,6 +258,15 @@ class AppStrings {
     required this.importSuccess,
     required this.importInvalid,
     required this.shareUnavailable,
+    required this.exportSaved,
+    required this.exportFailed,
+    required this.storagePermissionDenied,
+    required this.restorePromptTitle,
+    required this.restorePromptMsg,
+    required this.check,
+    required this.notNow,
+    required this.restoreFoundTitle,
+    required this.noBackupsFound,
     required this.monthNames,
     required this.currency,
   });
@@ -268,6 +307,10 @@ class AppStrings {
     final month = int.tryParse(parts[1]) ?? 1;
     return '${monthNames[(month - 1).clamp(0, 11)]} ${parts[0]}';
   }
+
+  String restoreFoundMsg(String isoDate) => localeCode == 'en'
+      ? 'Found a backup from ${date(isoDate)}. Do you want to import it?'
+      : 'Pronađen je backup od ${date(isoDate)}. Želiš li da ga uvezeš?';
 
   String savedOn(String isoDate) => localeCode == 'en'
       ? 'Saved: ${date(isoDate)}'
