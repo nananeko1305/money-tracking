@@ -73,6 +73,22 @@ class AppStrings {
     noBackupsFound: 'Nema sačuvanih backup-ova',
     updateAvailableTitle: 'Nova verzija',
     download: 'Preuzmi',
+    howItWorks: 'Kako radi',
+    onbWelcomeTitle: 'Dobrodošli 👋',
+    onbWelcomeBody:
+        'Money Tracking vam pomaže da pratite mesečni budžet. Svi podaci ostaju na vašem telefonu — privatno i offline.',
+    onbCategoriesTitle: 'Napravite kategorije',
+    onbCategoriesBody:
+        'Dodajte kategorije poput Hrane ili Prevoza i zadajte mesečni budžet za svaku.',
+    onbExpensesTitle: 'Beležite troškove',
+    onbExpensesBody:
+        'Upisujte troškove u kategoriju. Aplikacija prati potrošeno i preostalo, uz jasnu traku napretka.',
+    onbReportsTitle: 'Izveštaji i backup',
+    onbReportsBody:
+        'Svakog 1. u mesecu budžet se arhivira kao izveštaj. Izvezite podatke na telefon i vratite ih kad god zatreba.',
+    onbSkip: 'Preskoči',
+    onbNext: 'Dalje',
+    onbStart: 'Kreni',
     monthNames: _monthsSr,
     currency: 'din',
   );
@@ -137,6 +153,22 @@ class AppStrings {
     noBackupsFound: 'No saved backups found',
     updateAvailableTitle: 'Update available',
     download: 'Download',
+    howItWorks: 'How it works',
+    onbWelcomeTitle: 'Welcome 👋',
+    onbWelcomeBody:
+        'Money Tracking helps you follow your monthly budget. All data stays on your phone — private and offline.',
+    onbCategoriesTitle: 'Create categories',
+    onbCategoriesBody:
+        'Add categories like Food or Transport and set a monthly budget for each.',
+    onbExpensesTitle: 'Log expenses',
+    onbExpensesBody:
+        'Add expenses to a category. The app tracks spent and remaining with a clear progress bar.',
+    onbReportsTitle: 'Reports & backup',
+    onbReportsBody:
+        'On the 1st of each month your budget is archived as a report. Export your data to the phone and restore it whenever you need.',
+    onbSkip: 'Skip',
+    onbNext: 'Next',
+    onbStart: 'Get started',
     monthNames: _monthsEn,
     currency: 'din',
   );
@@ -212,6 +244,19 @@ class AppStrings {
   // Update check
   final String updateAvailableTitle;
   final String download;
+  // Onboarding
+  final String howItWorks;
+  final String onbWelcomeTitle;
+  final String onbWelcomeBody;
+  final String onbCategoriesTitle;
+  final String onbCategoriesBody;
+  final String onbExpensesTitle;
+  final String onbExpensesBody;
+  final String onbReportsTitle;
+  final String onbReportsBody;
+  final String onbSkip;
+  final String onbNext;
+  final String onbStart;
 
   final List<String> monthNames;
 
@@ -276,6 +321,18 @@ class AppStrings {
     required this.noBackupsFound,
     required this.updateAvailableTitle,
     required this.download,
+    required this.howItWorks,
+    required this.onbWelcomeTitle,
+    required this.onbWelcomeBody,
+    required this.onbCategoriesTitle,
+    required this.onbCategoriesBody,
+    required this.onbExpensesTitle,
+    required this.onbExpensesBody,
+    required this.onbReportsTitle,
+    required this.onbReportsBody,
+    required this.onbSkip,
+    required this.onbNext,
+    required this.onbStart,
     required this.monthNames,
     required this.currency,
   });
