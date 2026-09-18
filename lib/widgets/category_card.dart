@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
-import '../models/budget.dart';
+import '../models/category.dart';
 import '../theme.dart';
 
 /// A single category card on the dashboard: budget summary, progress bar and an

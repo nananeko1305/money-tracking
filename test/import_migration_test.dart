@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:budget_tracker/services/storage.dart';
+import 'package:budget_tracker/services/budget_repository.dart';
 
 void main() {
   // A backup produced by the Expo app's exportData(): each category carries a
@@ -69,7 +69,7 @@ void main() {
 
   test('Expo backup imports into Flutter with spent preserved', () async {
     SharedPreferences.setMockInitialValues({});
-    final storage = BudgetStorage();
+    final storage = BudgetRepository();
 
     final ok = await storage.importJson(jsonEncode(expoExport));
     expect(ok, isTrue);
