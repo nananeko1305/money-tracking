@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_scope.dart';
 import '../services/backup.dart';
 import '../services/budget_repository.dart';
 import '../services/storage_permission.dart';
+import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/confirm_dialog.dart';
 import 'dashboard_screen.dart';
@@ -22,6 +24,7 @@ class _HomeShellState extends State<HomeShell> {
   final BudgetRepository _storage = BudgetRepository();
   final BackupService _backup = BackupService();
   final StoragePermission _permission = StoragePermission();
+  final UpdateChecker _updateChecker = UpdateChecker();
 
   int _index = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey =
@@ -32,7 +35,35 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeOfferRestore());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupChecks());
+  }
+
+  Future<void> _runStartupChecks() async {
+    await _maybeOfferRestore();
+    if (!mounted) return;
+    await _maybeOfferUpdate();
+  }
+
+  /// Since the app is not on any store, it checks GitHub Releases and offers to
+  /// download a newer version.
+  Future<void> _maybeOfferUpdate() async {
+    final update = await _updateChecker.checkForUpdate();
+    if (!mounted || update == null) return;
+
+    final strings = AppScope.of(context).strings;
+    final confirmed = await showConfirmDialog(
+      context,
+      title: strings.updateAvailableTitle,
+      message: strings.updateAvailableMsg(update.versionName),
+      confirmLabel: strings.download,
+      cancelLabel: strings.notNow,
+    );
+    if (!confirmed) return;
+
+    await launchUrl(
+      Uri.parse(update.downloadUrl),
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   /// On a fresh install / empty app, offers to find and import a backup saved on

@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.ver.outputs.version }}
+      sha256: ${{ steps.sum.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,8 +63,32 @@ jobs:
       - name: Test
         run: flutter test
 
+      # Writes android/key.properties from secrets so the APK is release-signed.
+      # No secret set -> no-op, and the build falls back to debug signing.
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "No keystore secret set — using debug signing."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
       - name: Build release APK
-        run: flutter build apk --release
+        run: >
+          flutter build apk --release
+          --build-number=${{ github.run_number }}
+          --obfuscate --split-debug-info=build/symbols
 
       - name: Read app version
         id: ver
@@ -72,20 +97,35 @@ jobs:
       - name: Rename APK
         run: cp build/app/outputs/flutter-apk/app-release.apk "${{ env.APK_NAME }}"
 
+      - name: Checksum
+        id: sum
+        run: |
+          HASH=$(sha256sum "${{ env.APK_NAME }}" | awk '{print $1}')
+          echo "$HASH  ${{ env.APK_NAME }}" > "${{ env.APK_NAME }}.sha256"
+          echo "sha256=$HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Bundle debug symbols
+        run: (cd build && zip -r ../debug-symbols.zip symbols) || echo "no symbols"
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.version }}-build.${{ github.run_number }}
           name: Money Tracking v${{ steps.ver.outputs.version }} (build ${{ github.run_number }})
-          files: ${{ env.APK_NAME }}
+          files: |
+            ${{ env.APK_NAME }}
+            ${{ env.APK_NAME }}.sha256
+            debug-symbols.zip
           make_latest: true
           body: |
-            Automatski build sa `main` grane.
+            Automated build from `main`.
 
             - Commit: ${{ github.sha }}
             - Build: #${{ github.run_number }}
+            - SHA-256: `${{ steps.sum.outputs.sha256 }}`
 
-            Skini `${{ env.APK_NAME }}` ispod i instaliraj na Android (dozvoli instalaciju iz nepoznatih izvora).
+            Download `${{ env.APK_NAME }}` below and install it on Android (allow
+            installation from unknown sources).
 
   deploy-pages:
     name: Deploy download page
@@ -109,6 +149,7 @@ jobs:
             -e "s|__VERSION__|${{ needs.build.outputs.version }}|g" \
             -e "s|__BUILD__|${{ github.run_number }}|g" \
             -e "s|__DATE__|$(date -u +%Y-%m-%d)|g" \
+            -e "s|__SHA256__|${{ needs.build.outputs.sha256 }}|g" \
             _site/index.html
 
       - uses: actions/configure-pages@v5
