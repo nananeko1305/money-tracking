@@ -1,343 +1,108 @@
 import 'package:intl/intl.dart';
 
-/// All user-facing strings plus locale-aware formatting, for the two supported
-/// languages: Serbian (Latin) and English.
-class AppStrings {
-  static const List<String> _monthsSr = [
-    'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun',
-    'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar',
-  ];
+import 'strings_en.dart';
+import 'strings_sr.dart';
 
-  static const List<String> _monthsEn = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-  static const AppStrings sr = AppStrings._(
-    localeCode: 'sr',
-    appName: 'Money Tracking',
-    navBudget: 'Budžet',
-    navReports: 'Izveštaji',
-    totalBudget: 'Ukupan budžet:',
-    totalSpent: 'Ukupno potrošeno:',
-    remaining: 'Preostalo:',
-    spent: 'Potrošeno:',
-    budget: 'Budžet:',
-    addCategory: 'Dodaj kategoriju',
-    newCategory: 'Nova kategorija',
-    editCategory: 'Izmeni kategoriju',
-    name: 'Naziv',
-    nameHint: 'npr. Hrana',
-    budgetHint: 'npr. 40000',
-    cancel: 'Otkaži',
-    save: 'Sačuvaj',
-    invalidCategory: 'Unesi validan naziv i budžet',
-    deleteCategoryTitle: 'Obriši kategoriju',
-    delete: 'Obriši',
-    amountHint: 'Iznos',
-    descHint: 'Opis (opciono)',
-    invalidAmount: 'Unesi validan iznos',
-    expense: 'Trošak',
-    noTransactions: 'Nema zabeleženih troškova',
-    categoryNotFound: 'Kategorija nije pronađena',
-    reportsTitle: 'Izveštaji',
-    archiveSubtitle: 'Arhiva mesečnih budžeta (poslednja godina)',
-    noReports: 'Nema sačuvanih izveštaja',
-    noReportsSub: 'Izveštaji se automatski čuvaju svakog 1. u mesecu',
-    remainingAtEnd: 'Preostalo na kraju:',
-    byCategory: 'Po kategorijama:',
-    dataSection: 'Podaci',
-    exportData: 'Izvezi podatke',
-    importData: 'Uvezi podatke',
-    settingsSection: 'Podešavanja',
-    language: 'Jezik',
-    theme: 'Tema',
-    themeSystem: 'Sistemska',
-    themeLight: 'Svetla',
-    themeDark: 'Tamna',
-    importConfirmTitle: 'Uvezi podatke',
-    importConfirmMsg:
-        'Uvoz će zameniti sve trenutne podatke sačuvanim backup-om. Da li želiš da nastaviš?',
-    import: 'Uvezi',
-    importSuccess: 'Podaci su uspešno uvezeni',
-    importInvalid: 'Neispravan backup fajl',
-    shareUnavailable: 'Deljenje nije dostupno na ovom uređaju',
-    exportSaved: 'Sačuvano u fasciklu Download/MoneyTracking',
-    exportFailed: 'Čuvanje nije uspelo',
-    storagePermissionDenied: 'Pristup fajlovima je odbijen',
-    restorePromptTitle: 'Vrati podatke',
-    restorePromptMsg:
-        'Ako imaš sačuvan backup na telefonu, mogu da ga pronađem i uvezem. Da proverim?',
-    check: 'Proveri',
-    notNow: 'Ne sada',
-    restoreFoundTitle: 'Pronađen backup',
-    noBackupsFound: 'Nema sačuvanih backup-ova',
-    updateAvailableTitle: 'Nova verzija',
-    download: 'Preuzmi',
-    howItWorks: 'Kako radi',
-    onbWelcomeTitle: 'Dobrodošli 👋',
-    onbWelcomeBody:
-        'Money Tracking vam pomaže da pratite mesečni budžet. Svi podaci ostaju na vašem telefonu — privatno i offline.',
-    onbCategoriesTitle: 'Napravite kategorije',
-    onbCategoriesBody:
-        'Dodajte kategorije poput Hrane ili Prevoza i zadajte mesečni budžet za svaku.',
-    onbExpensesTitle: 'Beležite troškove',
-    onbExpensesBody:
-        'Upisujte troškove u kategoriju. Aplikacija prati potrošeno i preostalo, uz jasnu traku napretka.',
-    onbReportsTitle: 'Izveštaji i backup',
-    onbReportsBody:
-        'Svakog 1. u mesecu budžet se arhivira kao izveštaj. Izvezite podatke na telefon i vratite ih kad god zatreba.',
-    onbSkip: 'Preskoči',
-    onbNext: 'Dalje',
-    onbStart: 'Kreni',
-    monthNames: _monthsSr,
-    currency: 'din',
-  );
-  static const AppStrings en = AppStrings._(
-    localeCode: 'en',
-    appName: 'Money Tracking',
-    navBudget: 'Budget',
-    navReports: 'Reports',
-    totalBudget: 'Total budget:',
-    totalSpent: 'Total spent:',
-    remaining: 'Remaining:',
-    spent: 'Spent:',
-    budget: 'Budget:',
-    addCategory: 'Add category',
-    newCategory: 'New category',
-    editCategory: 'Edit category',
-    name: 'Name',
-    nameHint: 'e.g. Food',
-    budgetHint: 'e.g. 40000',
-    cancel: 'Cancel',
-    save: 'Save',
-    invalidCategory: 'Enter a valid name and budget',
-    deleteCategoryTitle: 'Delete category',
-    delete: 'Delete',
-    amountHint: 'Amount',
-    descHint: 'Description (optional)',
-    invalidAmount: 'Enter a valid amount',
-    expense: 'Expense',
-    noTransactions: 'No recorded expenses',
-    categoryNotFound: 'Category not found',
-    reportsTitle: 'Reports',
-    archiveSubtitle: 'Monthly budget archive (last year)',
-    noReports: 'No saved reports',
-    noReportsSub: 'Reports are saved automatically on the 1st of each month',
-    remainingAtEnd: 'Remaining at end:',
-    byCategory: 'By category:',
-    dataSection: 'Data',
-    exportData: 'Export data',
-    importData: 'Import data',
-    settingsSection: 'Settings',
-    language: 'Language',
-    theme: 'Theme',
-    themeSystem: 'System',
-    themeLight: 'Light',
-    themeDark: 'Dark',
-    importConfirmTitle: 'Import data',
-    importConfirmMsg:
-        'Importing will replace all current data with the backup. Do you want to continue?',
-    import: 'Import',
-    importSuccess: 'Data imported successfully',
-    importInvalid: 'Invalid backup file',
-    shareUnavailable: 'Sharing is not available on this device',
-    exportSaved: 'Saved to Download/MoneyTracking',
-    exportFailed: 'Save failed',
-    storagePermissionDenied: 'File access was denied',
-    restorePromptTitle: 'Restore data',
-    restorePromptMsg:
-        'If you have a saved backup on your phone, I can find and import it. Check now?',
-    check: 'Check',
-    notNow: 'Not now',
-    restoreFoundTitle: 'Backup found',
-    noBackupsFound: 'No saved backups found',
-    updateAvailableTitle: 'Update available',
-    download: 'Download',
-    howItWorks: 'How it works',
-    onbWelcomeTitle: 'Welcome 👋',
-    onbWelcomeBody:
-        'Money Tracking helps you follow your monthly budget. All data stays on your phone — private and offline.',
-    onbCategoriesTitle: 'Create categories',
-    onbCategoriesBody:
-        'Add categories like Food or Transport and set a monthly budget for each.',
-    onbExpensesTitle: 'Log expenses',
-    onbExpensesBody:
-        'Add expenses to a category. The app tracks spent and remaining with a clear progress bar.',
-    onbReportsTitle: 'Reports & backup',
-    onbReportsBody:
-        'On the 1st of each month your budget is archived as a report. Export your data to the phone and restore it whenever you need.',
-    onbSkip: 'Skip',
-    onbNext: 'Next',
-    onbStart: 'Get started',
-    monthNames: _monthsEn,
-    currency: 'din',
-  );
+/// Contract for all user-facing strings plus locale-aware formatting.
+///
+/// The actual translations live in one file per language: Serbian in
+/// [StringsSr], English in [StringsEn]. Shared, language-neutral formatting
+/// (numbers, dates) is implemented here.
+abstract class AppStrings {
+  const AppStrings();
 
-  final String localeCode;
+  String get localeCode;
   // Navigation / app
-  final String appName;
-  final String navBudget;
-  final String navReports;
+  String get appName;
+  String get navBudget;
+  String get navReports;
   // Dashboard
-  final String totalBudget;
-  final String totalSpent;
-  final String remaining;
-  final String spent;
-  final String budget;
-  final String addCategory;
-  final String newCategory;
-  final String editCategory;
-  final String name;
-  final String nameHint;
-  final String budgetHint;
-  final String cancel;
-  final String save;
-  final String invalidCategory;
-  final String deleteCategoryTitle;
-
-  final String delete;
-  final String amountHint;
-  final String descHint;
-
-  final String invalidAmount;
+  String get totalBudget;
+  String get totalSpent;
+  String get remaining;
+  String get spent;
+  String get budget;
+  String get addCategory;
+  String get newCategory;
+  String get editCategory;
+  String get name;
+  String get nameHint;
+  String get budgetHint;
+  String get cancel;
+  String get save;
+  String get invalidCategory;
+  String get deleteCategoryTitle;
+  String get delete;
+  String get amountHint;
+  String get descHint;
+  String get invalidAmount;
   // Category detail
-  final String expense;
-  final String noTransactions;
-  final String categoryNotFound;
+  String get expense;
+  String get noTransactions;
+  String get categoryNotFound;
   // Reports
-  final String reportsTitle;
-  final String archiveSubtitle;
-
-  final String noReports;
-  final String noReportsSub;
-  final String remainingAtEnd;
-  final String byCategory;
+  String get reportsTitle;
+  String get archiveSubtitle;
+  String get noReports;
+  String get noReportsSub;
+  String get remainingAtEnd;
+  String get byCategory;
   // Drawer / settings
-  final String dataSection;
-  final String exportData;
-  final String importData;
-  final String settingsSection;
-  final String language;
-  final String theme;
-  final String themeSystem;
-  final String themeLight;
-  final String themeDark;
-  final String importConfirmTitle;
-  final String importConfirmMsg;
-
-  final String import;
-  final String importSuccess;
-
-  final String importInvalid;
-
-  final String shareUnavailable;
+  String get dataSection;
+  String get exportData;
+  String get importData;
+  String get settingsSection;
+  String get language;
+  String get theme;
+  String get themeSystem;
+  String get themeLight;
+  String get themeDark;
+  String get importConfirmTitle;
+  String get importConfirmMsg;
+  String get import;
+  String get importSuccess;
+  String get importInvalid;
+  String get shareUnavailable;
   // Backup save / restore
-  final String exportSaved;
-  final String exportFailed;
-  final String storagePermissionDenied;
-  final String restorePromptTitle;
-  final String restorePromptMsg;
-  final String check;
-  final String notNow;
-  final String restoreFoundTitle;
-  final String noBackupsFound;
+  String get exportSaved;
+  String get exportFailed;
+  String get storagePermissionDenied;
+  String get restorePromptTitle;
+  String get restorePromptMsg;
+  String get check;
+  String get notNow;
+  String get restoreFoundTitle;
+  String get noBackupsFound;
   // Update check
-  final String updateAvailableTitle;
-  final String download;
+  String get updateAvailableTitle;
+  String get download;
   // Onboarding
-  final String howItWorks;
-  final String onbWelcomeTitle;
-  final String onbWelcomeBody;
-  final String onbCategoriesTitle;
-  final String onbCategoriesBody;
-  final String onbExpensesTitle;
-  final String onbExpensesBody;
-  final String onbReportsTitle;
-  final String onbReportsBody;
-  final String onbSkip;
-  final String onbNext;
-  final String onbStart;
+  String get howItWorks;
+  String get onbWelcomeTitle;
+  String get onbWelcomeBody;
+  String get onbCategoriesTitle;
+  String get onbCategoriesBody;
+  String get onbExpensesTitle;
+  String get onbExpensesBody;
+  String get onbReportsTitle;
+  String get onbReportsBody;
+  String get onbSkip;
+  String get onbNext;
+  String get onbStart;
 
-  final List<String> monthNames;
+  List<String> get monthNames;
+  String get currency; // "din"
 
-  final String currency; // "din"
+  // ---- Locale-specific phrases (implemented per language) ----
 
-  const AppStrings._({
-    required this.localeCode,
-    required this.appName,
-    required this.navBudget,
-    required this.navReports,
-    required this.totalBudget,
-    required this.totalSpent,
-    required this.remaining,
-    required this.spent,
-    required this.budget,
-    required this.addCategory,
-    required this.newCategory,
-    required this.editCategory,
-    required this.name,
-    required this.nameHint,
-    required this.budgetHint,
-    required this.cancel,
-    required this.save,
-    required this.invalidCategory,
-    required this.deleteCategoryTitle,
-    required this.delete,
-    required this.amountHint,
-    required this.descHint,
-    required this.invalidAmount,
-    required this.expense,
-    required this.noTransactions,
-    required this.categoryNotFound,
-    required this.reportsTitle,
-    required this.archiveSubtitle,
-    required this.noReports,
-    required this.noReportsSub,
-    required this.remainingAtEnd,
-    required this.byCategory,
-    required this.dataSection,
-    required this.exportData,
-    required this.importData,
-    required this.settingsSection,
-    required this.language,
-    required this.theme,
-    required this.themeSystem,
-    required this.themeLight,
-    required this.themeDark,
-    required this.importConfirmTitle,
-    required this.importConfirmMsg,
-    required this.import,
-    required this.importSuccess,
-    required this.importInvalid,
-    required this.shareUnavailable,
-    required this.exportSaved,
-    required this.exportFailed,
-    required this.storagePermissionDenied,
-    required this.restorePromptTitle,
-    required this.restorePromptMsg,
-    required this.check,
-    required this.notNow,
-    required this.restoreFoundTitle,
-    required this.noBackupsFound,
-    required this.updateAvailableTitle,
-    required this.download,
-    required this.howItWorks,
-    required this.onbWelcomeTitle,
-    required this.onbWelcomeBody,
-    required this.onbCategoriesTitle,
-    required this.onbCategoriesBody,
-    required this.onbExpensesTitle,
-    required this.onbExpensesBody,
-    required this.onbReportsTitle,
-    required this.onbReportsBody,
-    required this.onbSkip,
-    required this.onbNext,
-    required this.onbStart,
-    required this.monthNames,
-    required this.currency,
-  });
+  String daysUntilReset(int n);
+  String deleteCategoryMsg(String categoryName);
+  String updateAvailableMsg(String version);
+  String restoreFoundMsg(String isoDate);
+  String savedOn(String isoDate);
+  String spentPercent(String percent);
 
-  // ---- Formatting helpers (locale-aware) ----
+  // ---- Shared, language-neutral formatting ----
 
   String amount(num value) =>
       NumberFormat('#,##0.##', localeCode).format(value);
@@ -354,17 +119,6 @@ class AppStrings {
     return '${date(iso)} ${_two(d.hour)}:${_two(d.minute)}';
   }
 
-  String daysUntilReset(int n) {
-    if (localeCode == 'en') {
-      return '$n ${n == 1 ? 'day' : 'days'} until reset';
-    }
-    return '$n ${n == 1 ? 'dan' : 'dana'} do reseta';
-  }
-
-  String deleteCategoryMsg(String categoryName) => localeCode == 'en'
-      ? 'Are you sure you want to delete "$categoryName"?'
-      : 'Da li si siguran da želiš da obrišeš "$categoryName"?';
-
   String din(num value) => '${amount(value)} $currency';
 
   String monthYear(String monthKey) {
@@ -374,21 +128,8 @@ class AppStrings {
     return '${monthNames[(month - 1).clamp(0, 11)]} ${parts[0]}';
   }
 
-  String updateAvailableMsg(String version) => localeCode == 'en'
-      ? 'A new version ($version) is available. Download it now?'
-      : 'Dostupna je nova verzija ($version). Preuzmi je sada?';
-
-  String restoreFoundMsg(String isoDate) => localeCode == 'en'
-      ? 'Found a backup from ${date(isoDate)}. Do you want to import it?'
-      : 'Pronađen je backup od ${date(isoDate)}. Želiš li da ga uvezeš?';
-
-  String savedOn(String isoDate) => localeCode == 'en'
-      ? 'Saved: ${date(isoDate)}'
-      : 'Sačuvano: ${date(isoDate)}';
-  String spentPercent(String percent) =>
-      localeCode == 'en' ? 'Spent: $percent%' : 'Potrošeno: $percent%';
-
-  static AppStrings of(String code) => code == 'en' ? en : sr;
+  static AppStrings of(String code) =>
+      code == 'en' ? const StringsEn() : const StringsSr();
 
   static String _two(int v) => v.toString().padLeft(2, '0');
 }
