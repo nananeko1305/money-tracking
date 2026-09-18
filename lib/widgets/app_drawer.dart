@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../app_scope.dart';
 import '../l10n/strings.dart';
@@ -78,11 +79,7 @@ class AppDrawer extends StatelessWidget {
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'v1.0.0',
-                style: TextStyle(
-                    fontSize: 12, color: Theme.of(context).hintColor),
-              ),
+              child: _VersionLabel(),
             ),
           ],
         ),
@@ -232,6 +229,24 @@ class AppDrawer extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Shows the installed app version, read from the platform package info.
+class _VersionLabel extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(fontSize: 12, color: Theme.of(context).hintColor);
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        final label = info == null
+            ? ''
+            : 'v${info.version} (${info.buildNumber})';
+        return Text(label, style: style);
+      },
     );
   }
 }

@@ -71,6 +71,8 @@ class AppStrings {
     notNow: 'Ne sada',
     restoreFoundTitle: 'Pronađen backup',
     noBackupsFound: 'Nema sačuvanih backup-ova',
+    updateAvailableTitle: 'Nova verzija',
+    download: 'Preuzmi',
     monthNames: _monthsSr,
     currency: 'din',
   );
@@ -133,6 +135,8 @@ class AppStrings {
     notNow: 'Not now',
     restoreFoundTitle: 'Backup found',
     noBackupsFound: 'No saved backups found',
+    updateAvailableTitle: 'Update available',
+    download: 'Download',
     monthNames: _monthsEn,
     currency: 'din',
   );
@@ -205,6 +209,9 @@ class AppStrings {
   final String notNow;
   final String restoreFoundTitle;
   final String noBackupsFound;
+  // Update check
+  final String updateAvailableTitle;
+  final String download;
 
   final List<String> monthNames;
 
@@ -267,6 +274,8 @@ class AppStrings {
     required this.notNow,
     required this.restoreFoundTitle,
     required this.noBackupsFound,
+    required this.updateAvailableTitle,
+    required this.download,
     required this.monthNames,
     required this.currency,
   });
@@ -307,6 +316,10 @@ class AppStrings {
     final month = int.tryParse(parts[1]) ?? 1;
     return '${monthNames[(month - 1).clamp(0, 11)]} ${parts[0]}';
   }
+
+  String updateAvailableMsg(String version) => localeCode == 'en'
+      ? 'A new version ($version) is available. Download it now?'
+      : 'Dostupna je nova verzija ($version). Preuzmi je sada?';
 
   String restoreFoundMsg(String isoDate) => localeCode == 'en'
       ? 'Found a backup from ${date(isoDate)}. Do you want to import it?'
