@@ -1,14 +1,19 @@
 import 'package:intl/intl.dart';
 
+import 'income_strings.dart';
+import 'loan_strings.dart';
+import 'savings_strings.dart';
 import 'strings_en.dart';
 import 'strings_sr.dart';
 
 /// Contract for all user-facing strings plus locale-aware formatting.
 ///
 /// The actual translations live in one file per language: Serbian in
-/// [StringsSr], English in [StringsEn]. Shared, language-neutral formatting
-/// (numbers, dates) is implemented here.
-abstract class AppStrings {
+/// [StringsSr], English in [StringsEn]. Feature-specific strings are declared
+/// in their own contracts ([IncomeStrings], [SavingsStrings], [LoanStrings]),
+/// each implemented per language in its own file. Shared, language-neutral
+/// formatting (numbers, dates) is implemented here.
+abstract class AppStrings with IncomeStrings, SavingsStrings, LoanStrings {
   const AppStrings();
 
   String get localeCode;
@@ -86,6 +91,8 @@ abstract class AppStrings {
   String get onbExpensesBody;
   String get onbReportsTitle;
   String get onbReportsBody;
+  String get onbMoneyTitle;
+  String get onbMoneyBody;
   String get onbSkip;
   String get onbNext;
   String get onbStart;
@@ -120,6 +127,9 @@ abstract class AppStrings {
   }
 
   String din(num value) => '${amount(value)} $currency';
+
+  /// [din] with an explicit '+' on positive values, for money flows.
+  String signedDin(num value) => value > 0 ? '+${din(value)}' : din(value);
 
   String monthYear(String monthKey) {
     final parts = monthKey.split('-');

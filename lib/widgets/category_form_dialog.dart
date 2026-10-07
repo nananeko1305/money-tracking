@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../l10n/amount_input.dart';
 import '../models/category.dart';
 
 /// The values entered in the category add / edit form.
@@ -19,7 +20,7 @@ Future<CategoryFormResult?> showCategoryFormDialog(
   final t = AppScope.of(context).strings;
   final nameController = TextEditingController(text: existing?.name ?? '');
   final budgetController = TextEditingController(
-      text: existing != null ? t.amount(existing.budget) : '');
+      text: existing != null ? amountInputText(existing.budget) : '');
 
   return showDialog<CategoryFormResult>(
     context: context,
@@ -56,8 +57,7 @@ Future<CategoryFormResult?> showCategoryFormDialog(
         FilledButton(
           onPressed: () {
             final name = nameController.text.trim();
-            final budget = double.tryParse(
-                budgetController.text.trim().replaceAll(',', '.'));
+            final budget = parseAmountInput(budgetController.text);
             if (name.isEmpty || budget == null || budget <= 0) {
               ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
                 content: Text(t.invalidCategory),

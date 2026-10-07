@@ -11,8 +11,8 @@ import 'monthly_rollover.dart';
 
 /// Application-facing budget operations. Coordinates persistence
 /// ([AppDataStore]), the monthly reset rule ([MonthlyRollover]) and id / color
-/// generation, exposing category and transaction CRUD plus backup
-/// import / export. Every read first applies the monthly rollover.
+/// generation, exposing the monthly income, category and transaction CRUD plus
+/// backup import / export. Every read first applies the monthly rollover.
 class BudgetRepository {
   BudgetRepository({
     AppDataStore? store,
@@ -51,6 +51,21 @@ class BudgetRepository {
 
   Future<List<MonthlyReport>> monthlyReports() async =>
       (await _load()).monthlyReports;
+
+  /// True when the store holds no data at all, as on a fresh install.
+  Future<bool> isEmpty() async => (await _load()).isEmpty;
+
+  /// The money available for the month: salary plus any other income. 0 means
+  /// it has not been set.
+  Future<double> monthlyIncome() async => (await _load()).monthlyIncome;
+
+  /// Sets the monthly income; 0 clears it. The value carries over to the next
+  /// months until it is changed.
+  Future<void> setMonthlyIncome(double income) async {
+    final data = await _load();
+    data.monthlyIncome = income;
+    await _store.write(data);
+  }
 
   Future<Category> addCategory(String name, double budget) async {
     final data = await _load();

@@ -1,7 +1,11 @@
+import 'income_strings_sr.dart';
+import 'loan_strings_sr.dart';
+import 'savings_strings_sr.dart';
 import 'strings.dart';
 
 /// Serbian (Latin) translations.
-class StringsSr extends AppStrings {
+class StringsSr extends AppStrings
+    with IncomeStringsSr, SavingsStringsSr, LoanStringsSr {
   const StringsSr();
 
   @override
@@ -144,6 +148,11 @@ class StringsSr extends AppStrings {
   @override
   String get onbReportsBody =>
       'Svakog 1. u mesecu budžet se arhivira kao izveštaj. Izvezite podatke na telefon i vratite ih kad god zatreba.';
+  @override
+  String get onbMoneyTitle => 'Prihod, štednja i pozajmice';
+  @override
+  String get onbMoneyBody =>
+      'Unesite mesečni prihod da vidite koliko je ostalo neraspoređeno. U Štednji vodite svoje fondove, a u Pozajmicama ko kome duguje.';
   @override
   String get onbSkip => 'Preskoči';
   @override
