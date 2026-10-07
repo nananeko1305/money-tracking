@@ -30,7 +30,15 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   @override
   void initState() {
     super.initState();
+    // Follows every change, including the ones made on another phone.
+    widget.storage.changes.addListener(_load);
     _load();
+  }
+
+  @override
+  void dispose() {
+    widget.storage.changes.removeListener(_load);
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -44,7 +52,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
 
   Future<void> _deleteTransaction(Transaction t) async {
     await widget.storage.deleteTransaction(widget.categoryId, t.id);
-    await _load();
   }
 
   @override

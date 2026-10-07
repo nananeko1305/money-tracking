@@ -1,11 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:budget_tracker/services/budget_repository.dart';
 import 'package:budget_tracker/services/loan_repository.dart';
 import 'package:budget_tracker/services/savings_repository.dart';
+
+import 'fake_account.dart';
 
 void main() {
   // A backup produced by the Expo app's exportData(): each category carries a
@@ -71,12 +72,13 @@ void main() {
     'lastResetDate': DateTime.now().toIso8601String(),
   };
 
-  test('Expo backup imports into Flutter with spent preserved', () async {
-    SharedPreferences.setMockInitialValues({});
-    final storage = BudgetRepository();
+  test('Expo backup imports into the account with spent preserved', () async {
+    final session = await openFakeSession();
+    final storage = BudgetRepository(session);
 
     final ok = await storage.importJson(jsonEncode(expoExport));
     expect(ok, isTrue);
+    await settle();
 
     final categories = await storage.currentCategories();
     expect(categories.length, 2);
@@ -99,8 +101,8 @@ void main() {
 
     // Backups from before income, savings and loans existed start without them.
     expect(await storage.monthlyIncome(), 0);
-    expect(await SavingsRepository().funds(), isEmpty);
-    expect(await LoanRepository().loans(), isEmpty);
+    expect(await SavingsRepository(session).funds(), isEmpty);
+    expect(await LoanRepository(session).loans(), isEmpty);
     expect(await storage.isEmpty(), isFalse);
   });
 }

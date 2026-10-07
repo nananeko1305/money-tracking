@@ -1,4 +1,5 @@
 import '../models/app_data.dart';
+import '../models/month_key.dart';
 import '../models/monthly_report.dart';
 
 /// The monthly reset rule. When the calendar month has advanced past
@@ -10,17 +11,14 @@ import '../models/monthly_report.dart';
 class MonthlyRollover {
   const MonthlyRollover();
 
-  static String _monthKey(DateTime date) =>
-      '${date.year}-${date.month.toString().padLeft(2, '0')}';
-
   /// Mutates [data] in place if a new month has begun. Returns true when a
   /// rollover was performed, so the caller knows it must persist the change.
   bool apply(AppData data, {DateTime? now}) {
     final current = now ?? DateTime.now();
     final lastReset = DateTime.tryParse(data.lastResetDate) ?? current;
-    final lastResetMonth = _monthKey(lastReset);
+    final lastResetMonth = monthKey(lastReset);
 
-    if (lastResetMonth == _monthKey(current) ||
+    if (lastResetMonth == monthKey(current) ||
         data.currentCategories.isEmpty) {
       return false;
     }

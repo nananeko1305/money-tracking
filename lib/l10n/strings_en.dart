@@ -1,3 +1,4 @@
+import 'account_strings_en.dart';
 import 'fixed_cost_strings_en.dart';
 import 'income_strings_en.dart';
 import 'loan_strings_en.dart';
@@ -10,7 +11,8 @@ class StringsEn extends AppStrings
         IncomeStringsEn,
         FixedCostStringsEn,
         SavingsStringsEn,
-        LoanStringsEn {
+        LoanStringsEn,
+        AccountStringsEn {
   const StringsEn();
 
   @override
@@ -100,7 +102,7 @@ class StringsEn extends AppStrings
   String get importConfirmTitle => 'Import data';
   @override
   String get importConfirmMsg =>
-      'Importing will replace all current data with the backup. Do you want to continue?';
+      'Importing will replace all data in your account, on every phone, with the backup. Do you want to continue?';
   @override
   String get import => 'Import';
   @override
@@ -138,7 +140,7 @@ class StringsEn extends AppStrings
   String get onbWelcomeTitle => 'Welcome 👋';
   @override
   String get onbWelcomeBody =>
-      'Money Tracking helps you follow your monthly budget. All data stays on your phone — private and offline.';
+      'Money Tracking helps you follow your monthly budget. Your data is saved to your account, visible only to you on every phone you sign in on, and the app works offline too.';
   @override
   String get onbCategoriesTitle => 'Create categories';
   @override
