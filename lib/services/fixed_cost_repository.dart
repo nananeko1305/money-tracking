@@ -1,49 +1,53 @@
-import '../models/app_data.dart';
+import 'package:flutter/foundation.dart' show Listenable;
+
 import '../models/fixed_cost.dart';
-import 'app_data_store.dart';
+import 'app_data_encoder.dart';
 import 'id_generator.dart';
+import 'user_collections.dart';
+import 'user_session.dart';
 
-/// CRUD for the user's fixed monthly costs. They live in the same persisted
-/// [AppData] blob as the budget, so backups include them, but they are
-/// independent of categories and untouched by the monthly rollover.
+/// CRUD for the signed-in account's fixed monthly costs. They are independent
+/// of categories and untouched when a month is closed. Writes are not awaited
+/// (see [WriteErrors]).
 class FixedCostRepository {
-  FixedCostRepository({AppDataStore? store, IdGenerator? ids})
-      : _store = store ?? AppDataStore(),
-        _ids = ids ?? IdGenerator();
+  FixedCostRepository(
+    this._session, {
+    IdGenerator? ids,
+    this._encoder = const AppDataEncoder(),
+  }) : _ids = ids ?? IdGenerator();
 
-  final AppDataStore _store;
+  final UserSession _session;
   final IdGenerator _ids;
+  final AppDataEncoder _encoder;
 
-  FixedCost? _costById(AppData data, String id) {
-    for (final c in data.fixedCosts) {
-      if (c.id == id) return c;
-    }
-    return null;
-  }
+  UserCollections get _docs => _session.docs;
 
-  Future<List<FixedCost>> fixedCosts() async => (await _store.read()).fixedCosts;
+  void _write(Future<void> write) => _session.writes.track(write);
+
+  /// Notifies whenever the account's data changes, on this phone or another.
+  Listenable get changes => _session.live;
+
+  Future<List<FixedCost>> fixedCosts() async =>
+      (await _session.live.ready()).fixedCosts;
 
   Future<FixedCost> addFixedCost(String name, double amount) async {
-    final data = await _store.read();
     final cost = FixedCost(id: _ids.next(), name: name, amount: amount);
-    data.fixedCosts.add(cost);
-    await _store.write(data);
+    // Creation time keeps new items after the existing ones.
+    final order = DateTime.now().millisecondsSinceEpoch;
+    _write(_docs.fixedCosts
+        .doc(cost.id)
+        .set(_encoder.fixedCost(cost, order: order)));
     return cost;
   }
 
   Future<void> updateFixedCost(String id,
       {String? name, double? amount}) async {
-    final data = await _store.read();
-    final cost = _costById(data, id);
-    if (cost == null) return;
-    if (name != null) cost.name = name;
-    if (amount != null) cost.amount = amount;
-    await _store.write(data);
+    _write(_docs.fixedCosts.doc(id).update({
+      'name': ?name,
+      'amount': ?amount,
+    }));
   }
 
-  Future<void> deleteFixedCost(String id) async {
-    final data = await _store.read();
-    data.fixedCosts.removeWhere((c) => c.id == id);
-    await _store.write(data);
-  }
+  Future<void> deleteFixedCost(String id) async =>
+      _write(_docs.fixedCosts.doc(id).delete());
 }

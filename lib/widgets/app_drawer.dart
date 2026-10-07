@@ -4,15 +4,19 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../app_scope.dart';
 import '../l10n/strings.dart';
 import '../theme.dart';
+import 'drawer_account_section.dart';
 
-/// The navigation drawer: section navigation, data import / export and the
-/// language / theme settings.
+/// The navigation drawer: section navigation, data import / export, the
+/// account (password, sign out) and the language / theme settings.
 class AppDrawer extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
   final Future<void> Function() onExport;
   final Future<void> Function() onImport;
   final VoidCallback onHowItWorks;
+  final String? accountEmail;
+  final VoidCallback onChangePassword;
+  final VoidCallback onSignOut;
 
   const AppDrawer({
     super.key,
@@ -21,6 +25,9 @@ class AppDrawer extends StatelessWidget {
     required this.onExport,
     required this.onImport,
     required this.onHowItWorks,
+    required this.accountEmail,
+    required this.onChangePassword,
+    required this.onSignOut,
   });
 
   @override
@@ -103,6 +110,12 @@ class AppDrawer extends StatelessWidget {
                 Navigator.pop(context);
                 onImport();
               },
+            ),
+            const Divider(),
+            DrawerAccountSection(
+              email: accountEmail,
+              onChangePassword: onChangePassword,
+              onSignOut: onSignOut,
             ),
             const Divider(),
             _sectionLabel(t.settingsSection),

@@ -30,7 +30,15 @@ class SavingsScreenState extends State<SavingsScreen> {
   @override
   void initState() {
     super.initState();
+    // Follows every change, including the ones made on another phone.
+    widget.storage.changes.addListener(reload);
     reload();
+  }
+
+  @override
+  void dispose() {
+    widget.storage.changes.removeListener(reload);
+    super.dispose();
   }
 
   Future<void> reload() async {

@@ -1,3 +1,5 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,9 +20,15 @@ void main() {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const AppRoot());
+    await tester.pumpWidget(AppRoot(
+      auth: MockFirebaseAuth(
+        signedIn: true,
+        mockUser: MockUser(uid: 'ana', email: 'ana@example.com'),
+      ),
+      firestore: FakeFirebaseFirestore(),
+    ));
     await tester.pumpAndSettle();
-    // A fresh install first offers to restore a backup; decline it.
+    // An empty account first offers to restore a backup; decline it.
     await tapText(tester, 'Ne sada');
   }
 

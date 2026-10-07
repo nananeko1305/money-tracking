@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Every account owns exactly the documents under users/{its uid}; nobody
+// else may read or write them. Accounts are created by the admin in the
+// Firebase console, so there are no roles or profiles to check.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /{collection}/{docId} {
+        allow read, write: if isOwner(uid) && collection in [
+          'categories', 'expenses', 'fixedCosts', 'savingsFunds',
+          'savingsEntries', 'loans', 'loanRepayments', 'reports'
+        ];
+      }
+    }
+  }
+}

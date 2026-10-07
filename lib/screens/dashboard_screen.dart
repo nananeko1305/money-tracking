@@ -38,7 +38,16 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    // Follows every change, including the ones made on another phone. Both
+    // repositories sit on the same live data, so one listener covers them.
+    widget.storage.changes.addListener(reload);
     reload();
+  }
+
+  @override
+  void dispose() {
+    widget.storage.changes.removeListener(reload);
+    super.dispose();
   }
 
   Future<void> reload() async {

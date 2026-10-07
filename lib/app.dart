@@ -1,16 +1,23 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app_scope.dart';
 import 'l10n/strings.dart';
-import 'screens/home_shell.dart';
+import 'screens/auth_gate.dart';
+import 'services/auth_service.dart';
 import 'services/settings_store.dart';
 import 'theme.dart';
 
 /// Root widget: owns the language / theme settings and wires them into the
 /// [MaterialApp] and the [AppScope] shared with the widget tree.
 class AppRoot extends StatefulWidget {
-  const AppRoot({super.key});
+  const AppRoot({super.key, this.auth, this.firestore});
+
+  /// Injected by tests; the app uses the default Firebase instances.
+  final FirebaseAuth? auth;
+  final FirebaseFirestore? firestore;
 
   @override
   State<AppRoot> createState() => _AppRootState();
@@ -18,6 +25,10 @@ class AppRoot extends StatefulWidget {
 
 class _AppRootState extends State<AppRoot> {
   final SettingsStore _settings = SettingsStore();
+  late final AuthService _auth =
+      AuthService(widget.auth ?? FirebaseAuth.instance);
+  late final FirebaseFirestore _firestore =
+      widget.firestore ?? FirebaseFirestore.instance;
 
   String _localeCode = 'sr';
   ThemeMode _themeMode = ThemeMode.system;
@@ -71,7 +82,7 @@ class _AppRootState extends State<AppRoot> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: const HomeShell(),
+        home: AuthGate(auth: _auth, firestore: _firestore),
       ),
     );
   }

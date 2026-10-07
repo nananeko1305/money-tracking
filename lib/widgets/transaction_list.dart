@@ -8,7 +8,7 @@ import '../theme.dart';
 /// deletes it. The caller decides how each row is titled and how its amount
 /// is shown, so the same list serves expenses, savings entries and loan
 /// repayments.
-class TransactionList extends StatelessWidget {
+class TransactionList extends StatefulWidget {
   final List<Transaction> transactions;
   final String emptyText;
   final String Function(Transaction) titleOf;
@@ -27,14 +27,39 @@ class TransactionList extends StatelessWidget {
   });
 
   @override
+  State<TransactionList> createState() => _TransactionListState();
+}
+
+class _TransactionListState extends State<TransactionList> {
+  /// Rows swiped away whose deletion has not come back from the data yet.
+  /// Writes are not awaited, so without this a rebuild in between would put
+  /// a dismissed row back, which Flutter does not allow.
+  final Set<String> _dismissed = {};
+
+  @override
+  void didUpdateWidget(TransactionList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final present = {for (final t in widget.transactions) t.id};
+    _dismissed.removeWhere((id) => !present.contains(id));
+  }
+
+  void _dismiss(Transaction tx) {
+    setState(() => _dismissed.add(tx.id));
+    widget.onDelete(tx);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = AppScope.of(context).strings;
     final pal = palette(context);
-    final sorted = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
+    final sorted = [
+      for (final tx in widget.transactions)
+        if (!_dismissed.contains(tx.id)) tx,
+    ]..sort((a, b) => b.date.compareTo(a.date));
 
     if (sorted.isEmpty) {
       return Center(
-        child: Text(emptyText, style: const TextStyle(fontSize: 15)),
+        child: Text(widget.emptyText, style: const TextStyle(fontSize: 15)),
       );
     }
 
@@ -53,17 +78,18 @@ class TransactionList extends StatelessWidget {
             color: pal.danger,
             child: const Icon(Icons.delete, color: Colors.white),
           ),
-          onDismissed: (_) => onDelete(tx),
+          onDismissed: (_) => _dismiss(tx),
           child: ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
-              titleOf(tx),
+              widget.titleOf(tx),
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             subtitle: Text(t.dateTime(tx.date)),
             trailing: Text(
-              amountOf(tx),
-              style: TextStyle(fontWeight: FontWeight.w600, color: colorOf(tx)),
+              widget.amountOf(tx),
+              style: TextStyle(
+                  fontWeight: FontWeight.w600, color: widget.colorOf(tx)),
             ),
           ),
         );

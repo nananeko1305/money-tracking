@@ -3,16 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
-import '../services/backup.dart';
+import '../l10n/error_text.dart';
+import '../services/auth_service.dart';
 import '../services/budget_repository.dart';
 import '../services/fixed_cost_repository.dart';
+import '../services/live_user_data.dart';
 import '../services/loan_repository.dart';
 import '../services/onboarding_store.dart';
 import '../services/push_service.dart';
 import '../services/savings_repository.dart';
-import '../services/storage_permission.dart';
+import '../services/user_session.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/backup_actions.dart';
+import '../widgets/backup_restore_prompt.dart';
+import '../widgets/change_password_dialog.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/load_error_view.dart';
+import '../widgets/local_data_prompt.dart';
 import '../widgets/update_prompt.dart';
 import 'dashboard_screen.dart';
 import 'fixed_costs_screen.dart';
@@ -21,42 +28,44 @@ import 'onboarding_screen.dart';
 import 'reports_screen.dart';
 import 'savings_screen.dart';
 
-/// The main app shell: bottom navigation between the dashboard, fixed costs,
-/// savings, loans and reports, the drawer, and the backup import / export
-/// flows.
+/// The signed-in app shell: bottom navigation between the dashboard, fixed
+/// costs, savings, loans and reports, the drawer, and the start-up offers
+/// (onboarding, filling an empty account, updates).
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+  const HomeShell({super.key, required this.session, required this.auth});
+
+  final UserSession session;
+  final AuthService auth;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
-  final BudgetRepository _storage = BudgetRepository();
-  final FixedCostRepository _fixedCosts = FixedCostRepository();
-  final SavingsRepository _savings = SavingsRepository();
-  final LoanRepository _loans = LoanRepository();
-  final BackupService _backup = BackupService();
-  final StoragePermission _permission = StoragePermission();
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
+  late final BudgetRepository _storage = BudgetRepository(widget.session);
+  late final FixedCostRepository _fixedCosts =
+      FixedCostRepository(widget.session);
+  late final SavingsRepository _savings = SavingsRepository(widget.session);
+  late final LoanRepository _loans = LoanRepository(widget.session);
+  final BackupActions _backup = BackupActions();
+  final BackupRestorePrompt _restore = BackupRestorePrompt();
+  final LocalDataPrompt _localData = LocalDataPrompt();
   final UpdatePrompt _updatePrompt = UpdatePrompt();
   final PushService _push = PushService();
   final OnboardingStore _onboarding = OnboardingStore();
   late final StreamSubscription<void> _releaseSub;
+  late final StreamSubscription<Object> _writeErrorSub;
 
   int _index = 0;
-  final GlobalKey<DashboardScreenState> _dashboardKey =
-      GlobalKey<DashboardScreenState>();
-  final GlobalKey<FixedCostsScreenState> _fixedCostsKey =
-      GlobalKey<FixedCostsScreenState>();
-  final GlobalKey<SavingsScreenState> _savingsKey =
-      GlobalKey<SavingsScreenState>();
-  final GlobalKey<LoansScreenState> _loansKey = GlobalKey<LoansScreenState>();
-  final GlobalKey<ReportsScreenState> _reportsKey =
-      GlobalKey<ReportsScreenState>();
+
+  LiveUserData get _live => widget.session.live;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _live.addListener(_onDataChanged);
+    _writeErrorSub = widget.session.writes.errors.listen(_showError);
     // A release push (received in the foreground or tapped) re-runs the
     // update check, which then offers the download.
     _releaseSub = _push.onRelease.listen((_) {
@@ -67,8 +76,30 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _live.removeListener(_onDataChanged);
+    _writeErrorSub.cancel();
     _releaseSub.cancel();
     super.dispose();
+  }
+
+  /// The month may have ended while the app was in the background.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) widget.session.closer.check();
+  }
+
+  /// Only the load-error view depends on this; the tabs follow the data
+  /// themselves.
+  void _onDataChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _showError(Object error) {
+    if (!mounted) return;
+    final strings = AppScope.of(context).strings;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(errorText(strings, error))));
   }
 
   Future<void> _runStartupChecks() async {
@@ -78,7 +109,7 @@ class _HomeShellState extends State<HomeShell> {
       await _onboarding.markSeen();
     }
     if (!mounted) return;
-    await _maybeOfferRestore();
+    await _offerToFillEmptyAccount();
     if (!mounted) return;
     await _updatePrompt.offer(context);
     // Last, so the notification permission prompt never lands on top of the
@@ -92,123 +123,30 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  /// On a fresh install / empty app, offers to find and import a backup saved on
-  /// the device. Does nothing if the app already has data.
-  Future<void> _maybeOfferRestore() async {
-    final empty = await _storage.isEmpty();
-    if (!mounted || !empty) return;
+  /// An account the server confirms is still empty is offered the data this
+  /// phone kept before accounts existed, or else a backup file. Offline the
+  /// cache cannot tell an empty account from an unsynced one, so nothing is
+  /// offered then.
+  Future<void> _offerToFillEmptyAccount() async {
+    final empty = await _live.isEmptyOnServer();
+    if (empty != true || !mounted) return;
+    if (await _localData.offer(context, widget.session)) return;
+    if (!mounted) return;
+    await _restore.offer(context, _storage);
+  }
 
+  void _select(int i) => setState(() => _index = i);
+
+  Future<void> _signOut() async {
     final strings = AppScope.of(context).strings;
-    final messenger = ScaffoldMessenger.of(context);
-
-    // Ask before requesting the system "All files access" permission, so a
-    // brand-new user isn't surprised by it.
-    final wantsCheck = await showConfirmDialog(
-      context,
-      title: strings.restorePromptTitle,
-      message: strings.restorePromptMsg,
-      confirmLabel: strings.check,
-      cancelLabel: strings.notNow,
-    );
-    if (!wantsCheck) return;
-
-    final granted = await _permission.ensureGranted();
-    if (!mounted) return;
-    if (!granted) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(strings.storagePermissionDenied)),
-      );
-      return;
-    }
-
-    final backup = await _backup.findLatestBackup();
-    if (!mounted) return;
-    if (backup == null) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(strings.noBackupsFound)),
-      );
-      return;
-    }
-
     final confirmed = await showConfirmDialog(
       context,
-      title: strings.restoreFoundTitle,
-      message: strings.restoreFoundMsg(backup.modified.toIso8601String()),
-      confirmLabel: strings.import,
+      title: strings.signOutTitle,
+      message: strings.signOutMsg,
+      confirmLabel: strings.signOut,
       cancelLabel: strings.cancel,
     );
-    if (!confirmed) return;
-
-    final raw = await _backup.readBackup(backup.path);
-    if (!mounted) return;
-    final ok = raw != null && await _storage.importJson(raw);
-    if (!mounted) return;
-    messenger.showSnackBar(SnackBar(
-      content: Text(ok ? strings.importSuccess : strings.importInvalid),
-    ));
-    if (ok) _reloadAll();
-  }
-
-  void _select(int i) {
-    setState(() => _index = i);
-    if (i == 0) _dashboardKey.currentState?.reload();
-    if (i == 1) _fixedCostsKey.currentState?.reload();
-    if (i == 2) _savingsKey.currentState?.reload();
-    if (i == 3) _loansKey.currentState?.reload();
-    if (i == 4) _reportsKey.currentState?.reload();
-  }
-
-  void _reloadAll() {
-    _dashboardKey.currentState?.reload();
-    _fixedCostsKey.currentState?.reload();
-    _savingsKey.currentState?.reload();
-    _loansKey.currentState?.reload();
-    _reportsKey.currentState?.reload();
-  }
-
-  Future<void> _handleExport() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final strings = AppScope.of(context).strings;
-
-    final granted = await _permission.ensureGranted();
-    if (!mounted) return;
-    if (!granted) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(strings.storagePermissionDenied)),
-      );
-      return;
-    }
-
-    final json = await _storage.exportJson();
-    final path = await _backup.saveToDevice(json);
-    if (!mounted) return;
-    messenger.showSnackBar(SnackBar(
-      content: Text(path != null ? strings.exportSaved : strings.exportFailed),
-    ));
-  }
-
-  Future<void> _handleImport() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final strings = AppScope.of(context).strings;
-
-    final confirmed = await showConfirmDialog(
-      context,
-      title: strings.importConfirmTitle,
-      message: strings.importConfirmMsg,
-      confirmLabel: strings.import,
-      cancelLabel: strings.cancel,
-    );
-    if (!confirmed) return;
-
-    final raw = await _backup.pickBackupFile();
-    if (raw == null) return;
-
-    final ok = await _storage.importJson(raw);
-    if (!mounted) return;
-    messenger.showSnackBar(SnackBar(
-      content: Text(ok ? strings.importSuccess : strings.importInvalid),
-    ));
-    if (ok) _reloadAll();
+    if (confirmed) await widget.auth.signOut();
   }
 
   @override
@@ -221,27 +159,32 @@ class _HomeShellState extends State<HomeShell> {
       strings.navLoans,
       strings.navReports,
     ];
+    final loadError = _live.data == null ? _live.error : null;
 
     return Scaffold(
       appBar: AppBar(title: Text(titles[_index])),
       drawer: AppDrawer(
         selectedIndex: _index,
         onSelect: _select,
-        onExport: _handleExport,
-        onImport: _handleImport,
+        onExport: () => _backup.exportData(context, _storage),
+        onImport: () => _backup.importData(context, _storage),
         onHowItWorks: _showOnboarding,
+        accountEmail: widget.session.email,
+        onChangePassword: () => showChangePasswordDialog(context, widget.auth),
+        onSignOut: _signOut,
       ),
-      body: IndexedStack(
-        index: _index,
-        children: [
-          DashboardScreen(
-              key: _dashboardKey, storage: _storage, savings: _savings),
-          FixedCostsScreen(key: _fixedCostsKey, storage: _fixedCosts),
-          SavingsScreen(key: _savingsKey, storage: _savings),
-          LoansScreen(key: _loansKey, storage: _loans),
-          ReportsScreen(key: _reportsKey, storage: _storage),
-        ],
-      ),
+      body: loadError != null
+          ? LoadErrorView(message: errorText(strings, loadError))
+          : IndexedStack(
+              index: _index,
+              children: [
+                DashboardScreen(storage: _storage, savings: _savings),
+                FixedCostsScreen(storage: _fixedCosts),
+                SavingsScreen(storage: _savings),
+                LoansScreen(storage: _loans),
+                ReportsScreen(storage: _storage),
+              ],
+            ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: _select,
