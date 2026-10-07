@@ -55,5 +55,12 @@ void main() {
 
     expect(find.text('Internet'), findsNothing);
     expect(find.text('30.000 din'), findsNWidgets(2)); // row + total
+
+    // Saving the editor unchanged keeps the amount ("30.000" is not 30).
+    await tester.tap(find.byIcon(Icons.edit));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sačuvaj'));
+    await tester.pumpAndSettle();
+    expect(find.text('30.000 din'), findsNWidgets(2));
   });
 }

@@ -1,14 +1,22 @@
 import 'package:intl/intl.dart';
 
+import 'fixed_cost_strings.dart';
+import 'income_strings.dart';
+import 'loan_strings.dart';
+import 'savings_strings.dart';
 import 'strings_en.dart';
 import 'strings_sr.dart';
 
 /// Contract for all user-facing strings plus locale-aware formatting.
 ///
 /// The actual translations live in one file per language: Serbian in
-/// [StringsSr], English in [StringsEn]. Shared, language-neutral formatting
-/// (numbers, dates) is implemented here.
-abstract class AppStrings {
+/// [StringsSr], English in [StringsEn]. Feature-specific strings are declared
+/// in their own contracts ([IncomeStrings], [FixedCostStrings],
+/// [SavingsStrings], [LoanStrings]), each implemented per language in its own
+/// file. Shared, language-neutral formatting (numbers, dates) is implemented
+/// here.
+abstract class AppStrings
+    with IncomeStrings, FixedCostStrings, SavingsStrings, LoanStrings {
   const AppStrings();
 
   String get localeCode;
@@ -16,7 +24,6 @@ abstract class AppStrings {
   String get appName;
   String get navBudget;
   String get navReports;
-  String get navFixedCosts;
   // Dashboard
   String get totalBudget;
   String get totalSpent;
@@ -41,17 +48,6 @@ abstract class AppStrings {
   String get expense;
   String get noTransactions;
   String get categoryNotFound;
-  // Fixed costs
-  String get fixedCostsTotal;
-  String get addFixedCost;
-  String get newFixedCost;
-  String get editFixedCost;
-  String get fixedCostNameHint;
-  String get fixedCostAmountHint;
-  String get invalidFixedCost;
-  String get noFixedCosts;
-  String get noFixedCostsSub;
-  String get deleteFixedCostTitle;
   // Reports
   String get reportsTitle;
   String get archiveSubtitle;
@@ -98,6 +94,8 @@ abstract class AppStrings {
   String get onbExpensesBody;
   String get onbReportsTitle;
   String get onbReportsBody;
+  String get onbMoneyTitle;
+  String get onbMoneyBody;
   String get onbSkip;
   String get onbNext;
   String get onbStart;
@@ -109,7 +107,6 @@ abstract class AppStrings {
 
   String daysUntilReset(int n);
   String deleteCategoryMsg(String categoryName);
-  String deleteFixedCostMsg(String costName);
   String updateAvailableMsg(String version);
   String restoreFoundMsg(String isoDate);
   String savedOn(String isoDate);
@@ -133,6 +130,9 @@ abstract class AppStrings {
   }
 
   String din(num value) => '${amount(value)} $currency';
+
+  /// [din] with an explicit '+' on positive values, for money flows.
+  String signedDin(num value) => value > 0 ? '+${din(value)}' : din(value);
 
   String monthYear(String monthKey) {
     final parts = monthKey.split('-');

@@ -1,7 +1,16 @@
+import 'fixed_cost_strings_sr.dart';
+import 'income_strings_sr.dart';
+import 'loan_strings_sr.dart';
+import 'savings_strings_sr.dart';
 import 'strings.dart';
 
 /// Serbian (Latin) translations.
-class StringsSr extends AppStrings {
+class StringsSr extends AppStrings
+    with
+        IncomeStringsSr,
+        FixedCostStringsSr,
+        SavingsStringsSr,
+        LoanStringsSr {
   const StringsSr();
 
   @override
@@ -12,8 +21,6 @@ class StringsSr extends AppStrings {
   String get navBudget => 'Budžet';
   @override
   String get navReports => 'Izveštaji';
-  @override
-  String get navFixedCosts => 'Fiksni troškovi';
   @override
   String get totalBudget => 'Ukupan budžet:';
   @override
@@ -58,27 +65,6 @@ class StringsSr extends AppStrings {
   String get noTransactions => 'Nema zabeleženih troškova';
   @override
   String get categoryNotFound => 'Kategorija nije pronađena';
-  @override
-  String get fixedCostsTotal => 'Ukupno mesečno:';
-  @override
-  String get addFixedCost => 'Dodaj fiksni trošak';
-  @override
-  String get newFixedCost => 'Novi fiksni trošak';
-  @override
-  String get editFixedCost => 'Izmeni fiksni trošak';
-  @override
-  String get fixedCostNameHint => 'npr. Kirija';
-  @override
-  String get fixedCostAmountHint => 'npr. 30000';
-  @override
-  String get invalidFixedCost => 'Unesi validan naziv i iznos';
-  @override
-  String get noFixedCosts => 'Nema fiksnih troškova';
-  @override
-  String get noFixedCostsSub =>
-      'Dodaj stavke koje plaćaš svakog meseca, npr. kiriju, struju ili internet.';
-  @override
-  String get deleteFixedCostTitle => 'Obriši fiksni trošak';
   @override
   String get reportsTitle => 'Izveštaji';
   @override
@@ -168,6 +154,11 @@ class StringsSr extends AppStrings {
   String get onbReportsBody =>
       'Svakog 1. u mesecu budžet se arhivira kao izveštaj. Izvezite podatke na telefon i vratite ih kad god zatreba.';
   @override
+  String get onbMoneyTitle => 'Prihod, štednja i pozajmice';
+  @override
+  String get onbMoneyBody =>
+      'Unesite mesečni prihod da vidite koliko je ostalo neraspoređeno. U Štednji vodite svoje fondove, a u Pozajmicama ko kome duguje.';
+  @override
   String get onbSkip => 'Preskoči';
   @override
   String get onbNext => 'Dalje';
@@ -188,10 +179,6 @@ class StringsSr extends AppStrings {
   @override
   String deleteCategoryMsg(String categoryName) =>
       'Da li si siguran da želiš da obrišeš "$categoryName"?';
-
-  @override
-  String deleteFixedCostMsg(String costName) =>
-      'Da li si siguran da želiš da obrišeš "$costName"?';
 
   @override
   String updateAvailableMsg(String version) =>

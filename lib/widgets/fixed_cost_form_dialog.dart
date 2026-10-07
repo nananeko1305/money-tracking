@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../l10n/amount_input.dart';
 import '../models/fixed_cost.dart';
 
 /// The values entered in the fixed cost add / edit form.
@@ -20,7 +21,7 @@ Future<FixedCostFormResult?> showFixedCostFormDialog(
   final t = AppScope.of(context).strings;
   final nameController = TextEditingController(text: existing?.name ?? '');
   final amountController = TextEditingController(
-      text: existing != null ? t.amount(existing.amount) : '');
+      text: existing != null ? amountInputText(existing.amount) : '');
 
   return showDialog<FixedCostFormResult>(
     context: context,
@@ -57,8 +58,7 @@ Future<FixedCostFormResult?> showFixedCostFormDialog(
         FilledButton(
           onPressed: () {
             final name = nameController.text.trim();
-            final amount = double.tryParse(
-                amountController.text.trim().replaceAll(',', '.'));
+            final amount = parseAmountInput(amountController.text);
             if (name.isEmpty || amount == null || amount <= 0) {
               ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
                 content: Text(t.invalidFixedCost),

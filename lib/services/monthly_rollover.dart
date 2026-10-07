@@ -4,7 +4,9 @@ import '../models/monthly_report.dart';
 /// The monthly reset rule. When the calendar month has advanced past
 /// [AppData.lastResetDate], the previous month is archived as a
 /// [MonthlyReport] and the live categories keep their structure but lose their
-/// recorded transactions. Pure logic — it never touches persistence.
+/// recorded transactions. Income, savings and loans carry over untouched; the
+/// report only snapshots the income and what was saved that month. Pure logic
+/// — it never touches persistence.
 class MonthlyRollover {
   const MonthlyRollover();
 
@@ -27,6 +29,8 @@ class MonthlyRollover {
         data.currentCategories.fold(0.0, (s, c) => s + c.budget);
     final totalSpent =
         data.currentCategories.fold(0.0, (s, c) => s + c.spent);
+    final saved =
+        data.savingsFunds.fold(0.0, (s, f) => s + f.netInMonth(lastReset));
 
     final report = MonthlyReport(
       id: lastResetMonth,
@@ -36,6 +40,8 @@ class MonthlyRollover {
       totalSpent: totalSpent,
       totalRemaining: totalBudget - totalSpent,
       savedAt: current.toIso8601String(),
+      income: data.monthlyIncome,
+      saved: saved,
     );
 
     // Keep category structure, clear the recorded transactions.

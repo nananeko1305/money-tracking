@@ -7,6 +7,16 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 
 - **Budget** — categories with budget and spending, progress bars, totals and
   days until reset (in dinars).
+- **Monthly income** — enter your salary (or total monthly budget) to see how
+  much is allocated to categories or moved to savings, what is unallocated and
+  what is left after spending. It carries over to the next month.
+- **Fixed costs** — recurring monthly items (rent, utilities, subscriptions)
+  with their amounts and the monthly total; kept across months.
+- **Savings** — funds (e.g. emergency fund, holiday) with an optional opening
+  balance and goal; record deposits and withdrawals, with history per fund.
+  Net savings for the month count against the monthly income.
+- **Loans** — who owes you and whom you owe, with repayments, what is left and
+  the net balance; settled loans are kept in a collapsed section.
 - **Reports** — monthly archive (last 12 months), saved automatically on the
   1st of each month.
 - **Transaction history** — every expense is stored individually (amount,
@@ -14,6 +24,8 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Category editing** — edit button to change a category's name and budget.
 - **Export / Import** — from the drawer; back up to a JSON file and import it
   back.
+- **Update notifications** — every new release sends a push notification
+  (Firebase Cloud Messaging); tapping it offers the APK download.
 - **Drawer** — navigation plus all options (export/import, language, theme).
 - **Themes** — light and dark, green/gold palette (green like paper money,
   gold like gold); System / Light / Dark, remembered between launches.

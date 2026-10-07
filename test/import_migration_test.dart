@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:budget_tracker/services/budget_repository.dart';
+import 'package:budget_tracker/services/loan_repository.dart';
+import 'package:budget_tracker/services/savings_repository.dart';
 
 void main() {
   // A backup produced by the Expo app's exportData(): each category carries a
@@ -64,8 +66,8 @@ void main() {
         'savedAt': '2026-09-01T00:00:00.000Z',
       },
     ],
-    // Current month, so the monthly rollover doesn't archive the imported
-    // transactions before the test reads them.
+    // The current month, so the import is not followed by a monthly rollover
+    // that would clear the imported transactions.
     'lastResetDate': DateTime.now().toIso8601String(),
   };
 
@@ -92,5 +94,13 @@ void main() {
     expect(reports.length, 1);
     expect(reports.first.totalSpent, 38000);
     expect(reports.first.categories.first.spent, 38000);
+    expect(reports.first.income, 0);
+    expect(reports.first.saved, 0);
+
+    // Backups from before income, savings and loans existed start without them.
+    expect(await storage.monthlyIncome(), 0);
+    expect(await SavingsRepository().funds(), isEmpty);
+    expect(await LoanRepository().loans(), isEmpty);
+    expect(await storage.isEmpty(), isFalse);
   });
 }

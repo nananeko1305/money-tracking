@@ -1,7 +1,16 @@
+import 'fixed_cost_strings_en.dart';
+import 'income_strings_en.dart';
+import 'loan_strings_en.dart';
+import 'savings_strings_en.dart';
 import 'strings.dart';
 
 /// English translations.
-class StringsEn extends AppStrings {
+class StringsEn extends AppStrings
+    with
+        IncomeStringsEn,
+        FixedCostStringsEn,
+        SavingsStringsEn,
+        LoanStringsEn {
   const StringsEn();
 
   @override
@@ -12,8 +21,6 @@ class StringsEn extends AppStrings {
   String get navBudget => 'Budget';
   @override
   String get navReports => 'Reports';
-  @override
-  String get navFixedCosts => 'Fixed costs';
   @override
   String get totalBudget => 'Total budget:';
   @override
@@ -58,27 +65,6 @@ class StringsEn extends AppStrings {
   String get noTransactions => 'No recorded expenses';
   @override
   String get categoryNotFound => 'Category not found';
-  @override
-  String get fixedCostsTotal => 'Monthly total:';
-  @override
-  String get addFixedCost => 'Add fixed cost';
-  @override
-  String get newFixedCost => 'New fixed cost';
-  @override
-  String get editFixedCost => 'Edit fixed cost';
-  @override
-  String get fixedCostNameHint => 'e.g. Rent';
-  @override
-  String get fixedCostAmountHint => 'e.g. 30000';
-  @override
-  String get invalidFixedCost => 'Enter a valid name and amount';
-  @override
-  String get noFixedCosts => 'No fixed costs yet';
-  @override
-  String get noFixedCostsSub =>
-      'Add the things you pay every month, like rent, utilities or internet.';
-  @override
-  String get deleteFixedCostTitle => 'Delete fixed cost';
   @override
   String get reportsTitle => 'Reports';
   @override
@@ -169,6 +155,11 @@ class StringsEn extends AppStrings {
   String get onbReportsBody =>
       'On the 1st of each month your budget is archived as a report. Export your data to the phone and restore it whenever you need.';
   @override
+  String get onbMoneyTitle => 'Income, savings and loans';
+  @override
+  String get onbMoneyBody =>
+      'Enter your monthly income to see how much is still unallocated. Keep your funds under Savings, and track who owes whom under Loans.';
+  @override
   String get onbSkip => 'Skip';
   @override
   String get onbNext => 'Next';
@@ -189,10 +180,6 @@ class StringsEn extends AppStrings {
   @override
   String deleteCategoryMsg(String categoryName) =>
       'Are you sure you want to delete "$categoryName"?';
-
-  @override
-  String deleteFixedCostMsg(String costName) =>
-      'Are you sure you want to delete "$costName"?';
 
   @override
   String updateAvailableMsg(String version) =>

@@ -1,4 +1,5 @@
-/// A single expense recorded against a category.
+/// A single dated money movement: an expense recorded against a category, a
+/// savings deposit (positive) or withdrawal (negative), or a loan repayment.
 class Transaction {
   final String id;
   final double amount;

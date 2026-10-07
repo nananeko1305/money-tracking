@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../l10n/amount_input.dart';
 import '../models/category.dart';
 import '../theme.dart';
 
@@ -39,8 +40,7 @@ class _CategoryCardState extends State<CategoryCard> {
 
   void _submit() {
     final t = AppScope.of(context).strings;
-    final amount =
-        double.tryParse(_amountController.text.trim().replaceAll(',', '.'));
+    final amount = parseAmountInput(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(t.invalidAmount)),
