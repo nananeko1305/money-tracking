@@ -15,7 +15,6 @@
       --text: #1B2A1E;
       --muted: #5b6b5e;
       --border: #e2e6dc;
-      --ios: #000000;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -27,7 +26,6 @@
         --text: #E7EFE8;
         --muted: #9fb0a2;
         --border: #263028;
-        --ios: #FFFFFF;
       }
     }
 
@@ -129,10 +127,6 @@
       background: var(--green);
     }
 
-    .btn.ios {
-      background: #000;
-    }
-
     .qr {
       margin: 24px auto 8px;
       width: 180px;
@@ -190,7 +184,6 @@
 <body>
   <main class="card">
 
-```
 <div class="header">
   <div class="icon">📈</div>
   <h1>Money Tracking</h1>
@@ -215,15 +208,6 @@
       🤖 Download for Android
     </a>
 
-    <a
-      class="btn ios"
-      href="__IOS_URL__"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      🍎 Install on iPhone
-    </a>
-
   </div>
 
   <div class="qr">
@@ -240,12 +224,6 @@
     and allow installation from unknown sources if prompted.
   </div>
 
-  <div class="note">
-    <strong>iPhone installation:</strong>
-    tap <strong>Install on iPhone</strong> to open the TestFlight
-    invitation. You need the TestFlight app installed on your iPhone.
-  </div>
-
   <p class="checksum">
     SHA-256<br />
     <code>__SHA256__</code>
@@ -256,7 +234,6 @@
   </div>
 
 </div>
-```
 
   </main>
 </body>

@@ -1,3 +1,4 @@
+import 'fixed_cost_strings_sr.dart';
 import 'income_strings_sr.dart';
 import 'loan_strings_sr.dart';
 import 'savings_strings_sr.dart';
@@ -5,7 +6,11 @@ import 'strings.dart';
 
 /// Serbian (Latin) translations.
 class StringsSr extends AppStrings
-    with IncomeStringsSr, SavingsStringsSr, LoanStringsSr {
+    with
+        IncomeStringsSr,
+        FixedCostStringsSr,
+        SavingsStringsSr,
+        LoanStringsSr {
   const StringsSr();
 
   @override

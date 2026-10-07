@@ -48,8 +48,8 @@ class AppDrawer extends StatelessWidget {
             ),
             _navTile(
               context,
-              icon: Icons.savings,
-              label: t.navSavings,
+              icon: Icons.receipt_long,
+              label: t.navFixedCosts,
               selected: selectedIndex == 1,
               onTap: () {
                 Navigator.pop(context);
@@ -58,8 +58,8 @@ class AppDrawer extends StatelessWidget {
             ),
             _navTile(
               context,
-              icon: Icons.handshake,
-              label: t.navLoans,
+              icon: Icons.savings,
+              label: t.navSavings,
               selected: selectedIndex == 2,
               onTap: () {
                 Navigator.pop(context);
@@ -68,12 +68,22 @@ class AppDrawer extends StatelessWidget {
             ),
             _navTile(
               context,
-              icon: Icons.bar_chart,
-              label: t.navReports,
+              icon: Icons.handshake,
+              label: t.navLoans,
               selected: selectedIndex == 3,
               onTap: () {
                 Navigator.pop(context);
                 onSelect(3);
+              },
+            ),
+            _navTile(
+              context,
+              icon: Icons.bar_chart,
+              label: t.navReports,
+              selected: selectedIndex == 4,
+              onTap: () {
+                Navigator.pop(context);
+                onSelect(4);
               },
             ),
             const Divider(),
