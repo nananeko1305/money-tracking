@@ -1,24 +1,29 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../app_scope.dart';
 import '../services/backup.dart';
 import '../services/budget_repository.dart';
+import '../services/fixed_cost_repository.dart';
 import '../services/loan_repository.dart';
 import '../services/onboarding_store.dart';
+import '../services/push_service.dart';
 import '../services/savings_repository.dart';
 import '../services/storage_permission.dart';
-import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/update_prompt.dart';
 import 'dashboard_screen.dart';
+import 'fixed_costs_screen.dart';
 import 'loans_screen.dart';
 import 'onboarding_screen.dart';
 import 'reports_screen.dart';
 import 'savings_screen.dart';
 
-/// The main app shell: bottom navigation between the dashboard, savings, loans
-/// and reports, the drawer, and the backup import / export flows.
+/// The main app shell: bottom navigation between the dashboard, fixed costs,
+/// savings, loans and reports, the drawer, and the backup import / export
+/// flows.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -28,16 +33,21 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   final BudgetRepository _storage = BudgetRepository();
+  final FixedCostRepository _fixedCosts = FixedCostRepository();
   final SavingsRepository _savings = SavingsRepository();
   final LoanRepository _loans = LoanRepository();
   final BackupService _backup = BackupService();
   final StoragePermission _permission = StoragePermission();
-  final UpdateChecker _updateChecker = UpdateChecker();
+  final UpdatePrompt _updatePrompt = UpdatePrompt();
+  final PushService _push = PushService();
   final OnboardingStore _onboarding = OnboardingStore();
+  late final StreamSubscription<void> _releaseSub;
 
   int _index = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey =
       GlobalKey<DashboardScreenState>();
+  final GlobalKey<FixedCostsScreenState> _fixedCostsKey =
+      GlobalKey<FixedCostsScreenState>();
   final GlobalKey<SavingsScreenState> _savingsKey =
       GlobalKey<SavingsScreenState>();
   final GlobalKey<LoansScreenState> _loansKey = GlobalKey<LoansScreenState>();
@@ -47,7 +57,18 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    // A release push (received in the foreground or tapped) re-runs the
+    // update check, which then offers the download.
+    _releaseSub = _push.onRelease.listen((_) {
+      if (mounted) _updatePrompt.offer(context);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupChecks());
+  }
+
+  @override
+  void dispose() {
+    _releaseSub.cancel();
+    super.dispose();
   }
 
   Future<void> _runStartupChecks() async {
@@ -59,34 +80,15 @@ class _HomeShellState extends State<HomeShell> {
     if (!mounted) return;
     await _maybeOfferRestore();
     if (!mounted) return;
-    await _maybeOfferUpdate();
+    await _updatePrompt.offer(context);
+    // Last, so the notification permission prompt never lands on top of the
+    // onboarding or another dialog.
+    await _push.start();
   }
 
   Future<void> _showOnboarding() {
     return Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-    );
-  }
-
-  /// Since the app is not on any store, it checks GitHub Releases and offers to
-  /// download a newer version.
-  Future<void> _maybeOfferUpdate() async {
-    final update = await _updateChecker.checkForUpdate();
-    if (!mounted || update == null) return;
-
-    final strings = AppScope.of(context).strings;
-    final confirmed = await showConfirmDialog(
-      context,
-      title: strings.updateAvailableTitle,
-      message: strings.updateAvailableMsg(update.versionName),
-      confirmLabel: strings.download,
-      cancelLabel: strings.notNow,
-    );
-    if (!confirmed) return;
-
-    await launchUrl(
-      Uri.parse(update.downloadUrl),
-      mode: LaunchMode.externalApplication,
     );
   }
 
@@ -150,13 +152,15 @@ class _HomeShellState extends State<HomeShell> {
   void _select(int i) {
     setState(() => _index = i);
     if (i == 0) _dashboardKey.currentState?.reload();
-    if (i == 1) _savingsKey.currentState?.reload();
-    if (i == 2) _loansKey.currentState?.reload();
-    if (i == 3) _reportsKey.currentState?.reload();
+    if (i == 1) _fixedCostsKey.currentState?.reload();
+    if (i == 2) _savingsKey.currentState?.reload();
+    if (i == 3) _loansKey.currentState?.reload();
+    if (i == 4) _reportsKey.currentState?.reload();
   }
 
   void _reloadAll() {
     _dashboardKey.currentState?.reload();
+    _fixedCostsKey.currentState?.reload();
     _savingsKey.currentState?.reload();
     _loansKey.currentState?.reload();
     _reportsKey.currentState?.reload();
@@ -212,6 +216,7 @@ class _HomeShellState extends State<HomeShell> {
     final strings = AppScope.of(context).strings;
     final titles = [
       strings.appName,
+      strings.navFixedCosts,
       strings.navSavings,
       strings.navLoans,
       strings.navReports,
@@ -231,6 +236,7 @@ class _HomeShellState extends State<HomeShell> {
         children: [
           DashboardScreen(
               key: _dashboardKey, storage: _storage, savings: _savings),
+          FixedCostsScreen(key: _fixedCostsKey, storage: _fixedCosts),
           SavingsScreen(key: _savingsKey, storage: _savings),
           LoansScreen(key: _loansKey, storage: _loans),
           ReportsScreen(key: _reportsKey, storage: _storage),
@@ -243,6 +249,10 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet),
             label: strings.navBudget,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.receipt_long),
+            label: strings.navFixedCostsShort,
           ),
           NavigationDestination(
             icon: const Icon(Icons.savings),

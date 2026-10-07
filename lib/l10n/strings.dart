@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 
+import 'fixed_cost_strings.dart';
 import 'income_strings.dart';
 import 'loan_strings.dart';
 import 'savings_strings.dart';
@@ -10,10 +11,12 @@ import 'strings_sr.dart';
 ///
 /// The actual translations live in one file per language: Serbian in
 /// [StringsSr], English in [StringsEn]. Feature-specific strings are declared
-/// in their own contracts ([IncomeStrings], [SavingsStrings], [LoanStrings]),
-/// each implemented per language in its own file. Shared, language-neutral
-/// formatting (numbers, dates) is implemented here.
-abstract class AppStrings with IncomeStrings, SavingsStrings, LoanStrings {
+/// in their own contracts ([IncomeStrings], [FixedCostStrings],
+/// [SavingsStrings], [LoanStrings]), each implemented per language in its own
+/// file. Shared, language-neutral formatting (numbers, dates) is implemented
+/// here.
+abstract class AppStrings
+    with IncomeStrings, FixedCostStrings, SavingsStrings, LoanStrings {
   const AppStrings();
 
   String get localeCode;
