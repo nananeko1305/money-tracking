@@ -1,15 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../app_scope.dart';
 import '../services/backup.dart';
 import '../services/budget_repository.dart';
 import '../services/fixed_cost_repository.dart';
 import '../services/onboarding_store.dart';
+import '../services/push_service.dart';
 import '../services/storage_permission.dart';
-import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/update_prompt.dart';
 import 'dashboard_screen.dart';
 import 'fixed_costs_screen.dart';
 import 'onboarding_screen.dart';
@@ -29,8 +31,10 @@ class _HomeShellState extends State<HomeShell> {
   final FixedCostRepository _fixedCosts = FixedCostRepository();
   final BackupService _backup = BackupService();
   final StoragePermission _permission = StoragePermission();
-  final UpdateChecker _updateChecker = UpdateChecker();
+  final UpdatePrompt _updatePrompt = UpdatePrompt();
+  final PushService _push = PushService();
   final OnboardingStore _onboarding = OnboardingStore();
+  late final StreamSubscription<void> _releaseSub;
 
   int _index = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey =
@@ -43,7 +47,18 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
+    // A release push (received in the foreground or tapped) re-runs the
+    // update check, which then offers the download.
+    _releaseSub = _push.onRelease.listen((_) {
+      if (mounted) _updatePrompt.offer(context);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupChecks());
+  }
+
+  @override
+  void dispose() {
+    _releaseSub.cancel();
+    super.dispose();
   }
 
   Future<void> _runStartupChecks() async {
@@ -55,34 +70,15 @@ class _HomeShellState extends State<HomeShell> {
     if (!mounted) return;
     await _maybeOfferRestore();
     if (!mounted) return;
-    await _maybeOfferUpdate();
+    await _updatePrompt.offer(context);
+    // Last, so the notification permission prompt never lands on top of the
+    // onboarding or another dialog.
+    await _push.start();
   }
 
   Future<void> _showOnboarding() {
     return Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-    );
-  }
-
-  /// Since the app is not on any store, it checks GitHub Releases and offers to
-  /// download a newer version.
-  Future<void> _maybeOfferUpdate() async {
-    final update = await _updateChecker.checkForUpdate();
-    if (!mounted || update == null) return;
-
-    final strings = AppScope.of(context).strings;
-    final confirmed = await showConfirmDialog(
-      context,
-      title: strings.updateAvailableTitle,
-      message: strings.updateAvailableMsg(update.versionName),
-      confirmLabel: strings.download,
-      cancelLabel: strings.notNow,
-    );
-    if (!confirmed) return;
-
-    await launchUrl(
-      Uri.parse(update.downloadUrl),
-      mode: LaunchMode.externalApplication,
     );
   }
 
