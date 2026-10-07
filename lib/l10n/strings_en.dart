@@ -1,7 +1,11 @@
+import 'income_strings_en.dart';
+import 'loan_strings_en.dart';
+import 'savings_strings_en.dart';
 import 'strings.dart';
 
 /// English translations.
-class StringsEn extends AppStrings {
+class StringsEn extends AppStrings
+    with IncomeStringsEn, SavingsStringsEn, LoanStringsEn {
   const StringsEn();
 
   @override
@@ -145,6 +149,11 @@ class StringsEn extends AppStrings {
   @override
   String get onbReportsBody =>
       'On the 1st of each month your budget is archived as a report. Export your data to the phone and restore it whenever you need.';
+  @override
+  String get onbMoneyTitle => 'Income, savings and loans';
+  @override
+  String get onbMoneyBody =>
+      'Enter your monthly income to see how much is still unallocated. Keep your funds under Savings, and track who owes whom under Loans.';
   @override
   String get onbSkip => 'Skip';
   @override

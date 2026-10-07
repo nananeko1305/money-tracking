@@ -3,18 +3,26 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../models/category.dart';
 import '../services/budget_repository.dart';
+import '../services/savings_repository.dart';
 import '../theme.dart';
 import '../widgets/category_card.dart';
 import '../widgets/category_form_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/days_banner.dart';
+import '../widgets/income_card.dart';
+import '../widgets/income_dialog.dart';
 import '../widgets/totals_card.dart';
 import 'category_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final BudgetRepository storage;
+  final SavingsRepository savings;
 
-  const DashboardScreen({super.key, required this.storage});
+  const DashboardScreen({
+    super.key,
+    required this.storage,
+    required this.savings,
+  });
 
   @override
   State<DashboardScreen> createState() => DashboardScreenState();
@@ -22,6 +30,8 @@ class DashboardScreen extends StatefulWidget {
 
 class DashboardScreenState extends State<DashboardScreen> {
   List<Category> _categories = [];
+  double _income = 0;
+  double _savedThisMonth = 0;
   int _daysRemaining = 0;
   bool _loading = true;
 
@@ -33,9 +43,13 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> reload() async {
     final cats = await widget.storage.currentCategories();
+    final income = await widget.storage.monthlyIncome();
+    final saved = await widget.savings.netSavedInMonth(DateTime.now());
     if (!mounted) return;
     setState(() {
       _categories = cats;
+      _income = income;
+      _savedThisMonth = saved;
       _daysRemaining = widget.storage.daysUntilReset();
       _loading = false;
     });
@@ -43,6 +57,13 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   double get _totalBudget => _categories.fold(0.0, (s, c) => s + c.budget);
   double get _totalSpent => _categories.fold(0.0, (s, c) => s + c.spent);
+
+  Future<void> _editIncome() async {
+    final income = await showIncomeDialog(context, current: _income);
+    if (income == null) return;
+    await widget.storage.setMonthlyIncome(income);
+    await reload();
+  }
 
   Future<void> _addCategory() async {
     final result = await showCategoryFormDialog(context);
@@ -109,6 +130,14 @@ class DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           DaysBanner(text: t.daysUntilReset(_daysRemaining)),
+          const SizedBox(height: 16),
+          IncomeCard(
+            income: _income,
+            allocated: _totalBudget,
+            spent: _totalSpent,
+            savedThisMonth: _savedThisMonth,
+            onEdit: _editIncome,
+          ),
           const SizedBox(height: 16),
           if (_categories.isNotEmpty) ...[
             TotalsCard(

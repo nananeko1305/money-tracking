@@ -4,17 +4,21 @@ import 'package:url_launcher/url_launcher.dart';
 import '../app_scope.dart';
 import '../services/backup.dart';
 import '../services/budget_repository.dart';
+import '../services/loan_repository.dart';
 import '../services/onboarding_store.dart';
+import '../services/savings_repository.dart';
 import '../services/storage_permission.dart';
 import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/confirm_dialog.dart';
 import 'dashboard_screen.dart';
+import 'loans_screen.dart';
 import 'onboarding_screen.dart';
 import 'reports_screen.dart';
+import 'savings_screen.dart';
 
-/// The main app shell: bottom navigation between the dashboard and reports,
-/// the drawer, and the backup import / export flows.
+/// The main app shell: bottom navigation between the dashboard, savings, loans
+/// and reports, the drawer, and the backup import / export flows.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -24,6 +28,8 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   final BudgetRepository _storage = BudgetRepository();
+  final SavingsRepository _savings = SavingsRepository();
+  final LoanRepository _loans = LoanRepository();
   final BackupService _backup = BackupService();
   final StoragePermission _permission = StoragePermission();
   final UpdateChecker _updateChecker = UpdateChecker();
@@ -32,6 +38,9 @@ class _HomeShellState extends State<HomeShell> {
   int _index = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey =
       GlobalKey<DashboardScreenState>();
+  final GlobalKey<SavingsScreenState> _savingsKey =
+      GlobalKey<SavingsScreenState>();
+  final GlobalKey<LoansScreenState> _loansKey = GlobalKey<LoansScreenState>();
   final GlobalKey<ReportsScreenState> _reportsKey =
       GlobalKey<ReportsScreenState>();
 
@@ -84,9 +93,8 @@ class _HomeShellState extends State<HomeShell> {
   /// On a fresh install / empty app, offers to find and import a backup saved on
   /// the device. Does nothing if the app already has data.
   Future<void> _maybeOfferRestore() async {
-    final cats = await _storage.currentCategories();
-    final reports = await _storage.monthlyReports();
-    if (!mounted || cats.isNotEmpty || reports.isNotEmpty) return;
+    final empty = await _storage.isEmpty();
+    if (!mounted || !empty) return;
 
     final strings = AppScope.of(context).strings;
     final messenger = ScaffoldMessenger.of(context);
@@ -136,16 +144,22 @@ class _HomeShellState extends State<HomeShell> {
     messenger.showSnackBar(SnackBar(
       content: Text(ok ? strings.importSuccess : strings.importInvalid),
     ));
-    if (ok) {
-      _dashboardKey.currentState?.reload();
-      _reportsKey.currentState?.reload();
-    }
+    if (ok) _reloadAll();
   }
 
   void _select(int i) {
     setState(() => _index = i);
     if (i == 0) _dashboardKey.currentState?.reload();
-    if (i == 1) _reportsKey.currentState?.reload();
+    if (i == 1) _savingsKey.currentState?.reload();
+    if (i == 2) _loansKey.currentState?.reload();
+    if (i == 3) _reportsKey.currentState?.reload();
+  }
+
+  void _reloadAll() {
+    _dashboardKey.currentState?.reload();
+    _savingsKey.currentState?.reload();
+    _loansKey.currentState?.reload();
+    _reportsKey.currentState?.reload();
   }
 
   Future<void> _handleExport() async {
@@ -190,16 +204,18 @@ class _HomeShellState extends State<HomeShell> {
     messenger.showSnackBar(SnackBar(
       content: Text(ok ? strings.importSuccess : strings.importInvalid),
     ));
-    if (ok) {
-      _dashboardKey.currentState?.reload();
-      _reportsKey.currentState?.reload();
-    }
+    if (ok) _reloadAll();
   }
 
   @override
   Widget build(BuildContext context) {
     final strings = AppScope.of(context).strings;
-    final titles = [strings.appName, strings.navReports];
+    final titles = [
+      strings.appName,
+      strings.navSavings,
+      strings.navLoans,
+      strings.navReports,
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(titles[_index])),
@@ -213,7 +229,10 @@ class _HomeShellState extends State<HomeShell> {
       body: IndexedStack(
         index: _index,
         children: [
-          DashboardScreen(key: _dashboardKey, storage: _storage),
+          DashboardScreen(
+              key: _dashboardKey, storage: _storage, savings: _savings),
+          SavingsScreen(key: _savingsKey, storage: _savings),
+          LoansScreen(key: _loansKey, storage: _loans),
           ReportsScreen(key: _reportsKey, storage: _storage),
         ],
       ),
@@ -224,6 +243,14 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet),
             label: strings.navBudget,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.savings),
+            label: strings.navSavings,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.handshake),
+            label: strings.navLoans,
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart),

@@ -48,12 +48,32 @@ class AppDrawer extends StatelessWidget {
             ),
             _navTile(
               context,
-              icon: Icons.bar_chart,
-              label: t.navReports,
+              icon: Icons.savings,
+              label: t.navSavings,
               selected: selectedIndex == 1,
               onTap: () {
                 Navigator.pop(context);
                 onSelect(1);
+              },
+            ),
+            _navTile(
+              context,
+              icon: Icons.handshake,
+              label: t.navLoans,
+              selected: selectedIndex == 2,
+              onTap: () {
+                Navigator.pop(context);
+                onSelect(2);
+              },
+            ),
+            _navTile(
+              context,
+              icon: Icons.bar_chart,
+              label: t.navReports,
+              selected: selectedIndex == 3,
+              onTap: () {
+                Navigator.pop(context);
+                onSelect(3);
               },
             ),
             const Divider(),

@@ -41,6 +41,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _OnboardingPage(Icons.account_balance_wallet, t.onbCategoriesTitle,
           t.onbCategoriesBody),
       _OnboardingPage(Icons.payments, t.onbExpensesTitle, t.onbExpensesBody),
+      _OnboardingPage(
+          Icons.account_balance, t.onbMoneyTitle, t.onbMoneyBody),
       _OnboardingPage(Icons.bar_chart, t.onbReportsTitle, t.onbReportsBody),
     ];
     final isLast = _index == pages.length - 1;

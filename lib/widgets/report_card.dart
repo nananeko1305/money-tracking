@@ -40,6 +40,14 @@ class ReportCard extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
           ),
           const Divider(height: 24),
+          if (report.income > 0) ...[
+            _row(t.reportIncome, t.din(report.income), null, false),
+            const SizedBox(height: 8),
+          ],
+          if (report.saved != 0) ...[
+            _row(t.reportSaved, t.signedDin(report.saved), pal.positive, false),
+            const SizedBox(height: 8),
+          ],
           _row(t.totalBudget, t.din(report.totalBudget), null, false),
           const SizedBox(height: 8),
           _row(t.totalSpent, t.din(report.totalSpent), pal.spent, false),

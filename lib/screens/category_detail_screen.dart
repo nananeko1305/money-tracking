@@ -5,6 +5,7 @@ import '../models/category.dart';
 import '../models/transaction.dart';
 import '../services/budget_repository.dart';
 import '../theme.dart';
+import '../widgets/transaction_list.dart';
 
 /// Shows the transaction history for one category and allows deleting
 /// individual transactions.
@@ -64,8 +65,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   Widget _buildBody(BuildContext context, Category category) {
     final t = AppScope.of(context).strings;
     final pal = palette(context);
-    final transactions = [...category.transactions]
-      ..sort((a, b) => b.date.compareTo(a.date));
 
     return Column(
       children: [
@@ -91,47 +90,15 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           ),
         ),
         Expanded(
-          child: transactions.isEmpty
-              ? Center(
-                  child: Text(
-                    t.noTransactions,
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: transactions.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (ctx, i) {
-                    final tx = transactions[i];
-                    return Dismissible(
-                      key: ValueKey(tx.id),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        color: pal.danger,
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      onDismissed: (_) => _deleteTransaction(tx),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          tx.description.isEmpty ? t.expense : tx.description,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: Text(t.dateTime(tx.date)),
-                        trailing: Text(
-                          t.din(tx.amount),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: pal.spent,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          child: TransactionList(
+            transactions: category.transactions,
+            emptyText: t.noTransactions,
+            titleOf: (tx) =>
+                tx.description.isEmpty ? t.expense : tx.description,
+            amountOf: (tx) => t.din(tx.amount),
+            colorOf: (_) => pal.spent,
+            onDelete: _deleteTransaction,
+          ),
         ),
       ],
     );

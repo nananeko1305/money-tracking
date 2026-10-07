@@ -4,23 +4,23 @@ import '../app_scope.dart';
 import '../theme.dart';
 import 'amount_row.dart';
 
-/// The dashboard summary card: total budget, spent and remaining.
-class TotalsCard extends StatelessWidget {
-  final double totalBudget;
-  final double totalSpent;
-  final double totalRemaining;
+/// The loans overview: what others still owe the user, what the user still
+/// owes, and the net of the two.
+class LoanSummaryCard extends StatelessWidget {
+  final double owedToMe;
+  final double iOwe;
 
-  const TotalsCard({
+  const LoanSummaryCard({
     super.key,
-    required this.totalBudget,
-    required this.totalSpent,
-    required this.totalRemaining,
+    required this.owedToMe,
+    required this.iOwe,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = AppScope.of(context).strings;
     final pal = palette(context);
+    final net = owedToMe - iOwe;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -30,14 +30,15 @@ class TotalsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          AmountRow(t.totalBudget, t.din(totalBudget)),
+          AmountRow('${t.owedToMe}:', t.din(owedToMe), color: pal.positive),
           const SizedBox(height: 8),
-          AmountRow(t.totalSpent, t.din(totalSpent), color: pal.spent),
-          const SizedBox(height: 8),
+          AmountRow('${t.iOwe}:', t.din(iOwe), color: pal.danger),
+          const Divider(height: 20),
           AmountRow(
-            t.remaining,
-            t.din(totalRemaining),
-            color: totalRemaining < 0 ? pal.danger : pal.positive,
+            t.loansNet,
+            t.signedDin(net),
+            color: net < 0 ? pal.danger : pal.positive,
+            emphasized: true,
           ),
         ],
       ),
