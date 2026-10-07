@@ -64,7 +64,9 @@ void main() {
         'savedAt': '2026-09-01T00:00:00.000Z',
       },
     ],
-    'lastResetDate': '2026-09-01T00:00:00.000Z',
+    // Current month, so the monthly rollover doesn't archive the imported
+    // transactions before the test reads them.
+    'lastResetDate': DateTime.now().toIso8601String(),
   };
 
   test('Expo backup imports into Flutter with spent preserved', () async {
