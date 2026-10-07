@@ -1,29 +1,36 @@
-import '../models/app_data.dart';
+import 'package:flutter/foundation.dart' show Listenable;
+
 import '../models/loan.dart';
 import '../models/loan_direction.dart';
 import '../models/transaction.dart';
-import 'app_data_store.dart';
+import 'app_data_encoder.dart';
+import 'batch_commits.dart';
 import 'id_generator.dart';
+import 'user_collections.dart';
+import 'user_session.dart';
 
-/// CRUD for loans (money lent or borrowed) and their repayments. Loans live in
-/// the same persisted [AppData] blob as the budget, so backups include them,
-/// but they are independent of the monthly budget and the rollover.
+/// CRUD for the signed-in account's loans (money lent or borrowed) and their
+/// repayments. They are independent of the monthly budget and untouched when
+/// a month is closed. Writes are not awaited (see [WriteErrors]).
 class LoanRepository {
-  LoanRepository({AppDataStore? store, IdGenerator? ids})
-      : _store = store ?? AppDataStore(),
-        _ids = ids ?? IdGenerator();
+  LoanRepository(
+    this._session, {
+    IdGenerator? ids,
+    this._encoder = const AppDataEncoder(),
+  }) : _ids = ids ?? IdGenerator();
 
-  final AppDataStore _store;
+  final UserSession _session;
   final IdGenerator _ids;
+  final AppDataEncoder _encoder;
 
-  Loan? _loanById(AppData data, String id) {
-    for (final l in data.loans) {
-      if (l.id == id) return l;
-    }
-    return null;
-  }
+  UserCollections get _docs => _session.docs;
 
-  Future<List<Loan>> loans() async => (await _store.read()).loans;
+  void _write(Future<void> write) => _session.writes.track(write);
+
+  /// Notifies whenever the account's data changes, on this phone or another.
+  Listenable get changes => _session.live;
+
+  Future<List<Loan>> loans() async => (await _session.live.ready()).loans;
 
   Future<Loan> addLoan({
     required String person,
@@ -31,7 +38,6 @@ class LoanRepository {
     required double amount,
     String note = '',
   }) async {
-    final data = await _store.read();
     final loan = Loan(
       id: _ids.next(),
       person: person,
@@ -40,8 +46,7 @@ class LoanRepository {
       note: note.trim(),
       date: DateTime.now().toIso8601String(),
     );
-    data.loans.add(loan);
-    await _store.write(data);
+    _write(_docs.loans.doc(loan.id).set(_encoder.loan(loan)));
     return loan;
   }
 
@@ -52,41 +57,39 @@ class LoanRepository {
     double? amount,
     String? note,
   }) async {
-    final data = await _store.read();
-    final loan = _loanById(data, id);
-    if (loan == null) return;
-    if (person != null) loan.person = person;
-    if (direction != null) loan.direction = direction;
-    if (amount != null) loan.amount = amount;
-    if (note != null) loan.note = note.trim();
-    await _store.write(data);
+    _write(_docs.loans.doc(id).update({
+      'person': ?person,
+      if (direction != null) 'direction': direction.name,
+      'amount': ?amount,
+      if (note != null) 'note': note.trim(),
+    }));
   }
 
+  /// Deletes the loan together with its repayments.
   Future<void> deleteLoan(String id) async {
-    final data = await _store.read();
-    data.loans.removeWhere((l) => l.id == id);
-    await _store.write(data);
+    final repayments =
+        _session.live.documents[UserCollections.loanRepaymentsName];
+    commitInBatches(_docs, _session.writes, [
+      (b) => b.delete(_docs.loans.doc(id)),
+      for (final doc in repayments)
+        if (doc['loanId'] == id)
+          (b) => b.delete(_docs.loanRepayments.doc(doc['id'] as String)),
+    ]);
   }
 
   Future<void> addRepayment(
       String loanId, double amount, String description) async {
-    final data = await _store.read();
-    final loan = _loanById(data, loanId);
-    if (loan == null) return;
-    loan.repayments.add(Transaction(
+    final repayment = Transaction(
       id: _ids.next(),
       amount: amount,
       description: description.trim(),
       date: DateTime.now().toIso8601String(),
-    ));
-    await _store.write(data);
+    );
+    _write(_docs.loanRepayments
+        .doc(repayment.id)
+        .set(_encoder.loanRepayment(repayment, loanId: loanId)));
   }
 
-  Future<void> deleteRepayment(String loanId, String repaymentId) async {
-    final data = await _store.read();
-    final loan = _loanById(data, loanId);
-    if (loan == null) return;
-    loan.repayments.removeWhere((r) => r.id == repaymentId);
-    await _store.write(data);
-  }
+  Future<void> deleteRepayment(String loanId, String repaymentId) async =>
+      _write(_docs.loanRepayments.doc(repaymentId).delete());
 }

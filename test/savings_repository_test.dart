@@ -1,21 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:budget_tracker/models/savings_fund.dart';
 import 'package:budget_tracker/models/transaction.dart';
 import 'package:budget_tracker/services/savings_repository.dart';
 
+import 'fake_account.dart';
+
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  Future<SavingsRepository> openRepo() async =>
+      SavingsRepository(await openFakeSession());
 
   test('balance is opening balance plus deposits minus withdrawals', () async {
-    final repo = SavingsRepository();
+    final repo = await openRepo();
     final fund = await repo.addFund('Hitni fond',
         target: 200000, openingBalance: 50000);
 
     await repo.deposit(fund.id, 20000, 'plata');
     await repo.withdraw(fund.id, 5000, '');
 
+    await settle();
     final saved = (await repo.funds()).single;
     expect(saved.balance, 65000);
     expect(saved.entries.map((e) => e.amount), [20000, -5000]);
@@ -23,11 +26,12 @@ void main() {
   });
 
   test('this month counts entries only, never the opening balance', () async {
-    final repo = SavingsRepository();
+    final repo = await openRepo();
     final fund = await repo.addFund('Letovanje', openingBalance: 500000);
     await repo.deposit(fund.id, 10000, '');
     await repo.withdraw(fund.id, 3000, '');
 
+    await settle();
     expect(await repo.netSavedInMonth(DateTime.now()), 7000);
   });
 
@@ -49,22 +53,25 @@ void main() {
   });
 
   test('update, delete entry and delete fund', () async {
-    final repo = SavingsRepository();
+    final repo = await openRepo();
     final fund = await repo.addFund('Auto');
     await repo.deposit(fund.id, 1000, '');
     await repo.updateFund(fund.id,
         name: 'Novi auto', target: 900000, openingBalance: 100);
 
+    await settle();
     var saved = (await repo.funds()).single;
     expect(saved.name, 'Novi auto');
     expect(saved.target, 900000);
     expect(saved.balance, 1100);
 
     await repo.deleteEntry(fund.id, saved.entries.single.id);
+    await settle();
     saved = (await repo.funds()).single;
     expect(saved.balance, 100);
 
     await repo.deleteFund(fund.id);
+    await settle();
     expect(await repo.funds(), isEmpty);
   });
 }

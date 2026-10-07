@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:budget_tracker/app_scope.dart';
 import 'package:budget_tracker/l10n/strings.dart';
 import 'package:budget_tracker/screens/fixed_costs_screen.dart';
 import 'package:budget_tracker/services/fixed_cost_repository.dart';
 import 'package:budget_tracker/theme.dart';
+
+import 'fake_account.dart';
 
 Widget _host(FixedCostRepository repo) => AppScope(
       strings: AppStrings.of('sr'),
@@ -32,8 +33,7 @@ Future<void> _addViaDialog(
 
 void main() {
   testWidgets('lists fixed costs with their monthly total', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final repo = FixedCostRepository();
+    final repo = FixedCostRepository(fakeSession());
 
     await tester.pumpWidget(_host(repo));
     await tester.pumpAndSettle();

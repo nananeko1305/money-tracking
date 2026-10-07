@@ -1,35 +1,40 @@
-import '../models/app_data.dart';
+import 'package:flutter/foundation.dart' show Listenable;
+
 import '../models/savings_fund.dart';
 import '../models/transaction.dart';
-import 'app_data_store.dart';
+import 'app_data_encoder.dart';
+import 'batch_commits.dart';
 import 'category_palette.dart';
 import 'id_generator.dart';
+import 'user_collections.dart';
+import 'user_session.dart';
 
-/// CRUD for savings funds and their deposits / withdrawals. Funds live in the
-/// same persisted [AppData] blob as the budget, so backups include them, but
-/// the monthly rollover never clears them.
+/// CRUD for the signed-in account's savings funds and their deposits /
+/// withdrawals. Closing a month never touches them. Writes are not awaited
+/// (see [WriteErrors]).
 class SavingsRepository {
-  SavingsRepository({
-    AppDataStore? store,
+  SavingsRepository(
+    this._session, {
     IdGenerator? ids,
     CategoryPalette? palette,
-  })  : _store = store ?? AppDataStore(),
-        _ids = ids ?? IdGenerator(),
+    this._encoder = const AppDataEncoder(),
+  })  : _ids = ids ?? IdGenerator(),
         _palette = palette ?? CategoryPalette();
 
-  final AppDataStore _store;
+  final UserSession _session;
   final IdGenerator _ids;
   final CategoryPalette _palette;
+  final AppDataEncoder _encoder;
 
-  SavingsFund? _fundById(AppData data, String id) {
-    for (final f in data.savingsFunds) {
-      if (f.id == id) return f;
-    }
-    return null;
-  }
+  UserCollections get _docs => _session.docs;
+
+  void _write(Future<void> write) => _session.writes.track(write);
+
+  /// Notifies whenever the account's data changes, on this phone or another.
+  Listenable get changes => _session.live;
 
   Future<List<SavingsFund>> funds() async =>
-      (await _store.read()).savingsFunds;
+      (await _session.live.ready()).savingsFunds;
 
   /// Net amount moved into all funds during the calendar month of [month].
   Future<double> netSavedInMonth(DateTime month) async =>
@@ -40,7 +45,6 @@ class SavingsRepository {
     double target = 0,
     double openingBalance = 0,
   }) async {
-    final data = await _store.read();
     final fund = SavingsFund(
       id: _ids.next(),
       name: name,
@@ -49,8 +53,7 @@ class SavingsRepository {
       target: target,
       openingBalance: openingBalance,
     );
-    data.savingsFunds.add(fund);
-    await _store.write(data);
+    _write(_docs.savingsFunds.doc(fund.id).set(_encoder.savingsFund(fund)));
     return fund;
   }
 
@@ -60,19 +63,22 @@ class SavingsRepository {
     double? target,
     double? openingBalance,
   }) async {
-    final data = await _store.read();
-    final fund = _fundById(data, id);
-    if (fund == null) return;
-    if (name != null) fund.name = name;
-    if (target != null) fund.target = target;
-    if (openingBalance != null) fund.openingBalance = openingBalance;
-    await _store.write(data);
+    _write(_docs.savingsFunds.doc(id).update({
+      'name': ?name,
+      'target': ?target,
+      'openingBalance': ?openingBalance,
+    }));
   }
 
+  /// Deletes the fund together with its entries.
   Future<void> deleteFund(String id) async {
-    final data = await _store.read();
-    data.savingsFunds.removeWhere((f) => f.id == id);
-    await _store.write(data);
+    final entries = _session.live.documents[UserCollections.savingsEntriesName];
+    commitInBatches(_docs, _session.writes, [
+      (b) => b.delete(_docs.savingsFunds.doc(id)),
+      for (final doc in entries)
+        if (doc['fundId'] == id)
+          (b) => b.delete(_docs.savingsEntries.doc(doc['id'] as String)),
+    ]);
   }
 
   Future<void> deposit(String fundId, double amount, String description) =>
@@ -81,26 +87,20 @@ class SavingsRepository {
   Future<void> withdraw(String fundId, double amount, String description) =>
       _addEntry(fundId, -amount, description);
 
-  Future<void> deleteEntry(String fundId, String entryId) async {
-    final data = await _store.read();
-    final fund = _fundById(data, fundId);
-    if (fund == null) return;
-    fund.entries.removeWhere((e) => e.id == entryId);
-    await _store.write(data);
-  }
+  Future<void> deleteEntry(String fundId, String entryId) async =>
+      _write(_docs.savingsEntries.doc(entryId).delete());
 
   /// Records a signed entry: positive for a deposit, negative for a withdrawal.
   Future<void> _addEntry(
       String fundId, double signedAmount, String description) async {
-    final data = await _store.read();
-    final fund = _fundById(data, fundId);
-    if (fund == null) return;
-    fund.entries.add(Transaction(
+    final entry = Transaction(
       id: _ids.next(),
       amount: signedAmount,
       description: description.trim(),
       date: DateTime.now().toIso8601String(),
-    ));
-    await _store.write(data);
+    );
+    _write(_docs.savingsEntries
+        .doc(entry.id)
+        .set(_encoder.savingsEntry(entry, fundId: fundId)));
   }
 }

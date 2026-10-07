@@ -1,3 +1,4 @@
+import 'account_strings_sr.dart';
 import 'fixed_cost_strings_sr.dart';
 import 'income_strings_sr.dart';
 import 'loan_strings_sr.dart';
@@ -10,7 +11,8 @@ class StringsSr extends AppStrings
         IncomeStringsSr,
         FixedCostStringsSr,
         SavingsStringsSr,
-        LoanStringsSr {
+        LoanStringsSr,
+        AccountStringsSr {
   const StringsSr();
 
   @override
@@ -99,7 +101,7 @@ class StringsSr extends AppStrings
   String get importConfirmTitle => 'Uvezi podatke';
   @override
   String get importConfirmMsg =>
-      'Uvoz će zameniti sve trenutne podatke sačuvanim backup-om. Da li želiš da nastaviš?';
+      'Uvoz će zameniti sve podatke na tvom nalogu, na svim telefonima, sačuvanim backup-om. Da li želiš da nastaviš?';
   @override
   String get import => 'Uvezi';
   @override
@@ -137,7 +139,7 @@ class StringsSr extends AppStrings
   String get onbWelcomeTitle => 'Dobrodošli 👋';
   @override
   String get onbWelcomeBody =>
-      'Money Tracking vam pomaže da pratite mesečni budžet. Svi podaci ostaju na vašem telefonu — privatno i offline.';
+      'Money Tracking vam pomaže da pratite mesečni budžet. Podaci se čuvaju na vašem nalogu, vidljivi su samo vama na svakom telefonu na kom se prijavite, i aplikacija radi i bez interneta.';
   @override
   String get onbCategoriesTitle => 'Napravite kategorije';
   @override

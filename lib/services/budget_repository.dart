@@ -1,74 +1,69 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart' show SetOptions;
+import 'package:flutter/foundation.dart' show Listenable;
+
 import '../models/app_data.dart';
 import '../models/category.dart';
 import '../models/monthly_report.dart';
 import '../models/transaction.dart';
-import 'app_data_store.dart';
+import 'app_data_encoder.dart';
+import 'batch_commits.dart';
 import 'category_palette.dart';
 import 'id_generator.dart';
 import 'monthly_rollover.dart';
+import 'user_collections.dart';
+import 'user_session.dart';
 
-/// Application-facing budget operations. Coordinates persistence
-/// ([AppDataStore]), the monthly reset rule ([MonthlyRollover]) and id / color
-/// generation, exposing the monthly income, category and transaction CRUD plus
-/// backup import / export. Every read first applies the monthly rollover.
+/// Application-facing budget operations on the signed-in account: the monthly
+/// income, categories and their expenses, reports, and backup import / export.
+/// Reads come from the live view; every change goes straight to its own
+/// document and is not awaited (see [WriteErrors]). Closing the month is the
+/// [MonthCloser]'s job.
 class BudgetRepository {
-  BudgetRepository({
-    AppDataStore? store,
-    MonthlyRollover? rollover,
+  BudgetRepository(
+    this._session, {
     IdGenerator? ids,
     CategoryPalette? palette,
-  })  : _store = store ?? AppDataStore(),
-        _rollover = rollover ?? const MonthlyRollover(),
-        _ids = ids ?? IdGenerator(),
+    this._encoder = const AppDataEncoder(),
+    this._rollover = const MonthlyRollover(),
+  })  : _ids = ids ?? IdGenerator(),
         _palette = palette ?? CategoryPalette();
 
-  final AppDataStore _store;
-  final MonthlyRollover _rollover;
+  final UserSession _session;
   final IdGenerator _ids;
   final CategoryPalette _palette;
+  final AppDataEncoder _encoder;
+  final MonthlyRollover _rollover;
 
-  /// Reads state, first applying the monthly rollover and persisting it if it
-  /// ran.
-  Future<AppData> _load() async {
-    final data = await _store.read();
-    if (_rollover.apply(data)) {
-      await _store.write(data);
-    }
-    return data;
-  }
+  UserCollections get _docs => _session.docs;
 
-  Category? _categoryById(AppData data, String id) {
-    for (final c in data.currentCategories) {
-      if (c.id == id) return c;
-    }
-    return null;
-  }
+  Future<AppData> _data() => _session.live.ready();
+
+  void _write(Future<void> write) => _session.writes.track(write);
+
+  /// Notifies whenever the account's data changes, on this phone or another.
+  Listenable get changes => _session.live;
 
   Future<List<Category>> currentCategories() async =>
-      (await _load()).currentCategories;
+      (await _data()).currentCategories;
 
   Future<List<MonthlyReport>> monthlyReports() async =>
-      (await _load()).monthlyReports;
+      (await _data()).monthlyReports;
 
-  /// True when the store holds no data at all, as on a fresh install.
-  Future<bool> isEmpty() async => (await _load()).isEmpty;
+  /// True when the account holds no data at all.
+  Future<bool> isEmpty() async => (await _data()).isEmpty;
 
   /// The money available for the month: salary plus any other income. 0 means
   /// it has not been set.
-  Future<double> monthlyIncome() async => (await _load()).monthlyIncome;
+  Future<double> monthlyIncome() async => (await _data()).monthlyIncome;
 
   /// Sets the monthly income; 0 clears it. The value carries over to the next
   /// months until it is changed.
-  Future<void> setMonthlyIncome(double income) async {
-    final data = await _load();
-    data.monthlyIncome = income;
-    await _store.write(data);
-  }
+  Future<void> setMonthlyIncome(double income) async => _write(_docs.profile
+      .set({'monthlyIncome': income}, SetOptions(merge: true)));
 
   Future<Category> addCategory(String name, double budget) async {
-    final data = await _load();
     final category = Category(
       id: _ids.next(),
       name: name,
@@ -76,67 +71,68 @@ class BudgetRepository {
       color: _palette.randomColor(),
       createdAt: DateTime.now().toIso8601String(),
     );
-    data.currentCategories.add(category);
-    await _store.write(data);
+    _write(_docs.categories.doc(category.id).set(_encoder.category(category)));
     return category;
   }
 
   Future<void> updateCategory(String id,
       {String? name, double? budget}) async {
-    final data = await _load();
-    final category = _categoryById(data, id);
-    if (category == null) return;
-    if (name != null) category.name = name;
-    if (budget != null) category.budget = budget;
-    await _store.write(data);
+    _write(_docs.categories.doc(id).update({
+      'name': ?name,
+      'budget': ?budget,
+    }));
   }
 
+  /// Deletes the category together with its expenses.
   Future<void> deleteCategory(String id) async {
-    final data = await _load();
-    data.currentCategories.removeWhere((c) => c.id == id);
-    await _store.write(data);
+    final expenses = _session.live.documents[UserCollections.expensesName];
+    commitInBatches(_docs, _session.writes, [
+      (b) => b.delete(_docs.categories.doc(id)),
+      for (final doc in expenses)
+        if (doc['categoryId'] == id)
+          (b) => b.delete(_docs.expenses.doc(doc['id'] as String)),
+    ]);
   }
 
   Future<void> addExpense(
       String categoryId, double amount, String description) async {
-    final data = await _load();
-    final category = _categoryById(data, categoryId);
-    if (category == null) return;
-    category.transactions.add(Transaction(
+    final expense = Transaction(
       id: _ids.next(),
       amount: amount,
       description: description.trim(),
       date: DateTime.now().toIso8601String(),
-    ));
-    await _store.write(data);
+    );
+    _write(_docs.expenses.doc(expense.id).set(_encoder.expense(
+          expense,
+          categoryId: categoryId,
+          month: _session.live.openMonth,
+        )));
   }
 
   Future<void> deleteTransaction(
       String categoryId, String transactionId) async {
-    final data = await _load();
-    final category = _categoryById(data, categoryId);
-    if (category == null) return;
-    category.transactions.removeWhere((t) => t.id == transactionId);
-    await _store.write(data);
+    _write(_docs.expenses.doc(transactionId).delete());
   }
 
   /// Days remaining until the first of next month.
   int daysUntilReset() => _rollover.daysUntilReset();
 
-  /// Serialises the whole store for backup.
-  Future<String> exportJson() async {
-    final data = await _load();
-    return const JsonEncoder.withIndent('  ').convert(data.toJson());
-  }
+  /// Serialises the account's data for backup, in the same format the app
+  /// has always exported.
+  Future<String> exportJson() async =>
+      const JsonEncoder.withIndent('  ').convert((await _data()).toJson());
 
-  /// Replaces the whole store from a backup string. Returns true on success.
+  /// Replaces the account's data with a backup. Returns false when [raw] is
+  /// not a valid backup.
   Future<bool> importJson(String raw) async {
+    final AppData data;
     try {
-      final data = AppData.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-      await _store.write(data);
-      return true;
+      data = AppData.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return false;
     }
+    await _data();
+    _session.replacer.replaceWith(data);
+    return true;
   }
 }

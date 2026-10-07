@@ -32,8 +32,23 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Languages** — Serbian (Latin) and English, toggled from the drawer and
   remembered.
 
-App data and settings (language, theme) are stored locally via
-`shared_preferences`.
+## Accounts and data
+
+- **Sign-in is required** (email + password, Firebase Auth). There is no
+  registration in the app: the admin creates accounts in the Firebase console
+  (Authentication → Users → Add user). A forgotten password is reset by email
+  from the login screen; the drawer has *Change password* and *Sign out*.
+- **Data lives in Cloud Firestore** under `users/{uid}/…` (project
+  `money-tracking-261007`, location `europe-west3`), so the same account sees
+  the same data on every phone. Firestore keeps an offline cache: the app works
+  without a connection and syncs when it is back.
+- **Security rules** (`firestore.rules`) let an account read and write only its
+  own documents. Deploy after changing them:
+  `firebase deploy --only firestore --project money-tracking-261007`.
+- **Data from before accounts existed** (kept on the phone in
+  `shared_preferences`) is offered for moving to the account the first time an
+  empty account signs in on that phone.
+- Language and theme settings stay on the phone (`shared_preferences`).
 
 ## Structure
 
