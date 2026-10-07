@@ -13,6 +13,8 @@ class StringsEn extends AppStrings {
   @override
   String get navReports => 'Reports';
   @override
+  String get navFixedCosts => 'Fixed costs';
+  @override
   String get totalBudget => 'Total budget:';
   @override
   String get totalSpent => 'Total spent:';
@@ -56,6 +58,27 @@ class StringsEn extends AppStrings {
   String get noTransactions => 'No recorded expenses';
   @override
   String get categoryNotFound => 'Category not found';
+  @override
+  String get fixedCostsTotal => 'Monthly total:';
+  @override
+  String get addFixedCost => 'Add fixed cost';
+  @override
+  String get newFixedCost => 'New fixed cost';
+  @override
+  String get editFixedCost => 'Edit fixed cost';
+  @override
+  String get fixedCostNameHint => 'e.g. Rent';
+  @override
+  String get fixedCostAmountHint => 'e.g. 30000';
+  @override
+  String get invalidFixedCost => 'Enter a valid name and amount';
+  @override
+  String get noFixedCosts => 'No fixed costs yet';
+  @override
+  String get noFixedCostsSub =>
+      'Add the things you pay every month, like rent, utilities or internet.';
+  @override
+  String get deleteFixedCostTitle => 'Delete fixed cost';
   @override
   String get reportsTitle => 'Reports';
   @override
@@ -166,6 +189,10 @@ class StringsEn extends AppStrings {
   @override
   String deleteCategoryMsg(String categoryName) =>
       'Are you sure you want to delete "$categoryName"?';
+
+  @override
+  String deleteFixedCostMsg(String costName) =>
+      'Are you sure you want to delete "$costName"?';
 
   @override
   String updateAvailableMsg(String version) =>

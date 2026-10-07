@@ -16,6 +16,7 @@ abstract class AppStrings {
   String get appName;
   String get navBudget;
   String get navReports;
+  String get navFixedCosts;
   // Dashboard
   String get totalBudget;
   String get totalSpent;
@@ -40,6 +41,17 @@ abstract class AppStrings {
   String get expense;
   String get noTransactions;
   String get categoryNotFound;
+  // Fixed costs
+  String get fixedCostsTotal;
+  String get addFixedCost;
+  String get newFixedCost;
+  String get editFixedCost;
+  String get fixedCostNameHint;
+  String get fixedCostAmountHint;
+  String get invalidFixedCost;
+  String get noFixedCosts;
+  String get noFixedCostsSub;
+  String get deleteFixedCostTitle;
   // Reports
   String get reportsTitle;
   String get archiveSubtitle;
@@ -97,6 +109,7 @@ abstract class AppStrings {
 
   String daysUntilReset(int n);
   String deleteCategoryMsg(String categoryName);
+  String deleteFixedCostMsg(String costName);
   String updateAvailableMsg(String version);
   String restoreFoundMsg(String isoDate);
   String savedOn(String isoDate);

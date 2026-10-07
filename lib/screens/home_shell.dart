@@ -4,17 +4,19 @@ import 'package:url_launcher/url_launcher.dart';
 import '../app_scope.dart';
 import '../services/backup.dart';
 import '../services/budget_repository.dart';
+import '../services/fixed_cost_repository.dart';
 import '../services/onboarding_store.dart';
 import '../services/storage_permission.dart';
 import '../services/update_checker.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/confirm_dialog.dart';
 import 'dashboard_screen.dart';
+import 'fixed_costs_screen.dart';
 import 'onboarding_screen.dart';
 import 'reports_screen.dart';
 
-/// The main app shell: bottom navigation between the dashboard and reports,
-/// the drawer, and the backup import / export flows.
+/// The main app shell: bottom navigation between the dashboard, fixed costs
+/// and reports, the drawer, and the backup import / export flows.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -24,6 +26,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   final BudgetRepository _storage = BudgetRepository();
+  final FixedCostRepository _fixedCosts = FixedCostRepository();
   final BackupService _backup = BackupService();
   final StoragePermission _permission = StoragePermission();
   final UpdateChecker _updateChecker = UpdateChecker();
@@ -32,6 +35,8 @@ class _HomeShellState extends State<HomeShell> {
   int _index = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey =
       GlobalKey<DashboardScreenState>();
+  final GlobalKey<FixedCostsScreenState> _fixedCostsKey =
+      GlobalKey<FixedCostsScreenState>();
   final GlobalKey<ReportsScreenState> _reportsKey =
       GlobalKey<ReportsScreenState>();
 
@@ -86,7 +91,13 @@ class _HomeShellState extends State<HomeShell> {
   Future<void> _maybeOfferRestore() async {
     final cats = await _storage.currentCategories();
     final reports = await _storage.monthlyReports();
-    if (!mounted || cats.isNotEmpty || reports.isNotEmpty) return;
+    final fixedCosts = await _fixedCosts.fixedCosts();
+    if (!mounted ||
+        cats.isNotEmpty ||
+        reports.isNotEmpty ||
+        fixedCosts.isNotEmpty) {
+      return;
+    }
 
     final strings = AppScope.of(context).strings;
     final messenger = ScaffoldMessenger.of(context);
@@ -136,16 +147,20 @@ class _HomeShellState extends State<HomeShell> {
     messenger.showSnackBar(SnackBar(
       content: Text(ok ? strings.importSuccess : strings.importInvalid),
     ));
-    if (ok) {
-      _dashboardKey.currentState?.reload();
-      _reportsKey.currentState?.reload();
-    }
+    if (ok) _reloadAll();
   }
 
   void _select(int i) {
     setState(() => _index = i);
     if (i == 0) _dashboardKey.currentState?.reload();
-    if (i == 1) _reportsKey.currentState?.reload();
+    if (i == 1) _fixedCostsKey.currentState?.reload();
+    if (i == 2) _reportsKey.currentState?.reload();
+  }
+
+  void _reloadAll() {
+    _dashboardKey.currentState?.reload();
+    _fixedCostsKey.currentState?.reload();
+    _reportsKey.currentState?.reload();
   }
 
   Future<void> _handleExport() async {
@@ -190,16 +205,17 @@ class _HomeShellState extends State<HomeShell> {
     messenger.showSnackBar(SnackBar(
       content: Text(ok ? strings.importSuccess : strings.importInvalid),
     ));
-    if (ok) {
-      _dashboardKey.currentState?.reload();
-      _reportsKey.currentState?.reload();
-    }
+    if (ok) _reloadAll();
   }
 
   @override
   Widget build(BuildContext context) {
     final strings = AppScope.of(context).strings;
-    final titles = [strings.appName, strings.navReports];
+    final titles = [
+      strings.appName,
+      strings.navFixedCosts,
+      strings.navReports,
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(titles[_index])),
@@ -214,6 +230,7 @@ class _HomeShellState extends State<HomeShell> {
         index: _index,
         children: [
           DashboardScreen(key: _dashboardKey, storage: _storage),
+          FixedCostsScreen(key: _fixedCostsKey, storage: _fixedCosts),
           ReportsScreen(key: _reportsKey, storage: _storage),
         ],
       ),
@@ -224,6 +241,10 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet),
             label: strings.navBudget,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.receipt_long),
+            label: strings.navFixedCosts,
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart),
