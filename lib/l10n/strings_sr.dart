@@ -1,4 +1,5 @@
 import 'account_strings_sr.dart';
+import 'checklist_strings_sr.dart';
 import 'fixed_cost_strings_sr.dart';
 import 'income_strings_sr.dart';
 import 'loan_strings_sr.dart';
@@ -12,7 +13,8 @@ class StringsSr extends AppStrings
         FixedCostStringsSr,
         SavingsStringsSr,
         LoanStringsSr,
-        AccountStringsSr {
+        AccountStringsSr,
+        ChecklistStringsSr {
   const StringsSr();
 
   @override

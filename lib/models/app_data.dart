@@ -1,4 +1,5 @@
 import 'category.dart';
+import 'checklist.dart';
 import 'fixed_cost.dart';
 import 'loan.dart';
 import 'monthly_report.dart';
@@ -13,6 +14,7 @@ class AppData {
   double monthlyIncome; // 0 = not set; carries over between months
   List<SavingsFund> savingsFunds;
   List<Loan> loans;
+  List<Checklist> checklists;
 
   AppData({
     required this.currentCategories,
@@ -22,9 +24,11 @@ class AppData {
     this.monthlyIncome = 0,
     List<SavingsFund>? savingsFunds,
     List<Loan>? loans,
+    List<Checklist>? checklists,
   })  : fixedCosts = fixedCosts ?? [],
         savingsFunds = savingsFunds ?? [],
-        loans = loans ?? [];
+        loans = loans ?? [],
+        checklists = checklists ?? [];
 
   factory AppData.empty() => AppData(
         currentCategories: [],
@@ -39,6 +43,7 @@ class AppData {
       fixedCosts.isEmpty &&
       savingsFunds.isEmpty &&
       loans.isEmpty &&
+      checklists.isEmpty &&
       monthlyIncome == 0;
 
   factory AppData.fromJson(Map<String, dynamic> json) => AppData(
@@ -68,6 +73,11 @@ class AppData {
                 ?.map((e) => Loan.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
+        // Absent in backups made before checklists existed.
+        checklists: (json['checklists'] as List<dynamic>?)
+                ?.map((e) => Checklist.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -79,5 +89,6 @@ class AppData {
         'monthlyIncome': monthlyIncome,
         'savingsFunds': savingsFunds.map((f) => f.toJson()).toList(),
         'loans': loans.map((l) => l.toJson()).toList(),
+        'checklists': checklists.map((c) => c.toJson()).toList(),
       };
 }

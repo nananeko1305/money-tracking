@@ -6,14 +6,16 @@ import '../l10n/strings.dart';
 import '../theme.dart';
 import 'drawer_account_section.dart';
 
-/// The navigation drawer: section navigation, data import / export, the
-/// account (password, sign out) and the language / theme settings.
+/// The navigation drawer: section navigation (plus the checklists screen),
+/// data import / export, the account (password, sign out) and the language /
+/// theme settings.
 class AppDrawer extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
   final Future<void> Function() onExport;
   final Future<void> Function() onImport;
   final VoidCallback onHowItWorks;
+  final VoidCallback onChecklists;
   final String? accountEmail;
   final VoidCallback onChangePassword;
   final VoidCallback onSignOut;
@@ -25,6 +27,7 @@ class AppDrawer extends StatelessWidget {
     required this.onExport,
     required this.onImport,
     required this.onHowItWorks,
+    required this.onChecklists,
     required this.accountEmail,
     required this.onChangePassword,
     required this.onSignOut,
@@ -91,6 +94,17 @@ class AppDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 onSelect(4);
+              },
+            ),
+            // Not a tab: the bottom bar is full, so lists open as a screen.
+            _navTile(
+              context,
+              icon: Icons.checklist,
+              label: t.navChecklists,
+              selected: false,
+              onTap: () {
+                Navigator.pop(context);
+                onChecklists();
               },
             ),
             const Divider(),
@@ -298,7 +312,7 @@ class _VersionLabel extends StatelessWidget {
         final info = snapshot.data;
         final label = info == null
             ? ''
-            : 'v${info.version} (${info.buildNumber})';
+            : 'v${info.version}';
         return Text(label, style: style);
       },
     );

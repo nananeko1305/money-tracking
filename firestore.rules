@@ -15,7 +15,8 @@ service cloud.firestore {
       match /{collection}/{docId} {
         allow read, write: if isOwner(uid) && collection in [
           'categories', 'expenses', 'fixedCosts', 'savingsFunds',
-          'savingsEntries', 'loans', 'loanRepayments', 'reports'
+          'savingsEntries', 'loans', 'loanRepayments', 'reports',
+          'checklists', 'checklistItems'
         ];
       }
     }

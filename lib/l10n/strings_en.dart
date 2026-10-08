@@ -1,4 +1,5 @@
 import 'account_strings_en.dart';
+import 'checklist_strings_en.dart';
 import 'fixed_cost_strings_en.dart';
 import 'income_strings_en.dart';
 import 'loan_strings_en.dart';
@@ -12,7 +13,8 @@ class StringsEn extends AppStrings
         FixedCostStringsEn,
         SavingsStringsEn,
         LoanStringsEn,
-        AccountStringsEn {
+        AccountStringsEn,
+        ChecklistStringsEn {
   const StringsEn();
 
   @override
