@@ -17,6 +17,8 @@ class UserCollections {
   static const String loansName = 'loans';
   static const String loanRepaymentsName = 'loanRepayments';
   static const String reportsName = 'reports';
+  static const String checklistsName = 'checklists';
+  static const String checklistItemsName = 'checklistItems';
 
   /// Every subcollection, in the order the live view subscribes to them.
   static const List<String> names = [
@@ -28,6 +30,8 @@ class UserCollections {
     loansName,
     loanRepaymentsName,
     reportsName,
+    checklistsName,
+    checklistItemsName,
   ];
 
   DocumentReference<Map<String, dynamic>> get profile =>
@@ -52,6 +56,10 @@ class UserCollections {
       collection(loanRepaymentsName);
   CollectionReference<Map<String, dynamic>> get reports =>
       collection(reportsName);
+  CollectionReference<Map<String, dynamic>> get checklists =>
+      collection(checklistsName);
+  CollectionReference<Map<String, dynamic>> get checklistItems =>
+      collection(checklistItemsName);
 
   WriteBatch batch() => _db.batch();
 }

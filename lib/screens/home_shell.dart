@@ -6,6 +6,7 @@ import '../app_scope.dart';
 import '../l10n/error_text.dart';
 import '../services/auth_service.dart';
 import '../services/budget_repository.dart';
+import '../services/checklist_repository.dart';
 import '../services/fixed_cost_repository.dart';
 import '../services/live_user_data.dart';
 import '../services/loan_repository.dart';
@@ -21,6 +22,7 @@ import '../widgets/confirm_dialog.dart';
 import '../widgets/load_error_view.dart';
 import '../widgets/local_data_prompt.dart';
 import '../widgets/update_prompt.dart';
+import 'checklists_screen.dart';
 import 'dashboard_screen.dart';
 import 'fixed_costs_screen.dart';
 import 'loans_screen.dart';
@@ -47,6 +49,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       FixedCostRepository(widget.session);
   late final SavingsRepository _savings = SavingsRepository(widget.session);
   late final LoanRepository _loans = LoanRepository(widget.session);
+  late final ChecklistRepository _checklists =
+      ChecklistRepository(widget.session);
   final BackupActions _backup = BackupActions();
   final BackupRestorePrompt _restore = BackupRestorePrompt();
   final LocalDataPrompt _localData = LocalDataPrompt();
@@ -123,6 +127,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     );
   }
 
+  void _openChecklists() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ChecklistsScreen(storage: _checklists),
+    ));
+  }
+
   /// An account the server confirms is still empty is offered the data this
   /// phone kept before accounts existed, or else a backup file. Offline the
   /// cache cannot tell an empty account from an unsynced one, so nothing is
@@ -169,6 +179,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         onExport: () => _backup.exportData(context, _storage),
         onImport: () => _backup.importData(context, _storage),
         onHowItWorks: _showOnboarding,
+        onChecklists: _openChecklists,
         accountEmail: widget.session.email,
         onChangePassword: () => showChangePasswordDialog(context, widget.auth),
         onSignOut: _signOut,
