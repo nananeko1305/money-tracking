@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../models/loan.dart';
 import '../models/loan_direction.dart';
+import '../models/loan_totals.dart';
 import '../services/loan_repository.dart';
 import '../theme.dart';
 import '../widgets/amount_entry_dialog.dart';
@@ -13,8 +14,8 @@ import '../widgets/loan_form_dialog.dart';
 import '../widgets/loan_summary_card.dart';
 import 'loan_detail_screen.dart';
 
-/// The "Loans" section: totals owed both ways, open loans grouped by
-/// direction, and settled loans tucked away at the bottom.
+/// The "Loans" section: totals owed both ways (per currency), open loans
+/// grouped by direction, and settled loans tucked away at the bottom.
 class LoansScreen extends StatefulWidget {
   final LoanRepository storage;
 
@@ -55,15 +56,13 @@ class LoansScreenState extends State<LoansScreen> {
       .where((l) => l.direction == direction && !l.isSettled)
       .toList();
 
-  double _owed(LoanDirection direction) =>
-      _open(direction).fold(0.0, (s, l) => s + l.remaining);
-
   Future<void> _addLoan() async {
     final result = await showLoanFormDialog(context);
     if (result == null) return;
     await widget.storage.addLoan(
       person: result.person,
       direction: result.direction,
+      currency: result.currency,
       amount: result.amount,
       note: result.note,
     );
@@ -77,6 +76,7 @@ class LoansScreenState extends State<LoansScreen> {
       loan.id,
       person: result.person,
       direction: result.direction,
+      currency: result.currency,
       amount: result.amount,
       note: result.note,
     );
@@ -102,7 +102,9 @@ class LoansScreenState extends State<LoansScreen> {
     final t = AppScope.of(context).strings;
     final messenger = ScaffoldMessenger.of(context);
     final entry = await showAmountEntryDialog(context,
-        title: t.repaymentTitle, confirmLabel: t.save);
+        title: t.repaymentTitle,
+        confirmLabel: t.save,
+        amountSuffix: t.currencySymbol(loan.currency));
     if (entry == null) return;
     if (entry.amount > loan.remaining + 0.005) {
       messenger.showSnackBar(SnackBar(content: Text(t.repaymentTooLarge)));
@@ -164,10 +166,7 @@ class LoansScreenState extends State<LoansScreen> {
           if (_loans.isEmpty)
             EmptyState(title: t.noLoans, subtitle: t.noLoansSub)
           else
-            LoanSummaryCard(
-              owedToMe: _owed(LoanDirection.lent),
-              iOwe: _owed(LoanDirection.borrowed),
-            ),
+            LoanSummaryCard(totals: LoanTotals.of(_loans)),
           const SizedBox(height: 8),
           ..._section(t.owedToMe, _open(LoanDirection.lent)),
           ..._section(t.iOwe, _open(LoanDirection.borrowed)),
