@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../models/money_currency.dart';
+
 import 'account_strings.dart';
 import 'fixed_cost_strings.dart';
 import 'income_strings.dart';
@@ -139,6 +141,20 @@ abstract class AppStrings
 
   /// [din] with an explicit '+' on positive values, for money flows.
   String signedDin(num value) => value > 0 ? '+${din(value)}' : din(value);
+
+  /// The short symbol of [c], also shown next to amount fields.
+  String currencySymbol(MoneyCurrency c) => switch (c) {
+        MoneyCurrency.rsd => currency,
+        MoneyCurrency.eur => '€',
+      };
+
+  /// [value] in [c]: "1.500 din", "1.500 €".
+  String money(num value, MoneyCurrency c) =>
+      '${amount(value)} ${currencySymbol(c)}';
+
+  /// [money] with an explicit '+' on positive values.
+  String signedMoney(num value, MoneyCurrency c) =>
+      value > 0 ? '+${money(value, c)}' : money(value, c);
 
   String monthYear(String monthKey) {
     final parts = monthKey.split('-');

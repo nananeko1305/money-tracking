@@ -1,14 +1,17 @@
 import 'dart:math';
 
 import 'loan_direction.dart';
+import 'money_currency.dart';
 import 'transaction.dart';
 
 /// Money lent to or borrowed from someone, with the repayments recorded so
-/// far. Loans live outside the monthly budget and survive the rollover.
+/// far, all in the loan's [currency]. Loans live outside the monthly budget
+/// and survive the rollover.
 class Loan {
   final String id;
   String person;
   LoanDirection direction;
+  MoneyCurrency currency;
   double amount;
   String note;
   final String date; // ISO date string, when the loan was made
@@ -20,6 +23,7 @@ class Loan {
     required this.direction,
     required this.amount,
     required this.date,
+    this.currency = MoneyCurrency.rsd,
     this.note = '',
     List<Transaction>? repayments,
   }) : repayments = repayments ?? [];
@@ -40,6 +44,7 @@ class Loan {
         id: json['id'] as String,
         person: json['person'] as String,
         direction: LoanDirection.fromName(json['direction'] as String?),
+        currency: MoneyCurrency.fromName(json['currency'] as String?),
         amount: (json['amount'] as num).toDouble(),
         date: json['date'] as String,
         note: (json['note'] as String?) ?? '',
@@ -53,6 +58,7 @@ class Loan {
         'id': id,
         'person': person,
         'direction': direction.name,
+        'currency': currency.name,
         'amount': amount,
         'date': date,
         'note': note,

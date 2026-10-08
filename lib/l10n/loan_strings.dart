@@ -12,6 +12,8 @@ mixin LoanStrings {
   String get loanPersonHint;
   String get loanAmount;
   String get loanAmountHint;
+  String get dinars;
+  String get euros;
   String get loanNoteHint;
   String get loanRepaid;
   String get recordRepayment;

@@ -12,11 +12,12 @@ class AmountEntry {
 
 /// Shows a dialog asking for a positive amount and an optional description,
 /// used for savings deposits / withdrawals and loan repayments. Returns null
-/// if it was dismissed.
+/// if it was dismissed. [amountSuffix] names the currency next to the field.
 Future<AmountEntry?> showAmountEntryDialog(
   BuildContext context, {
   required String title,
   required String confirmLabel,
+  String? amountSuffix,
 }) {
   final t = AppScope.of(context).strings;
   final amountController = TextEditingController();
@@ -34,7 +35,10 @@ Future<AmountEntry?> showAmountEntryDialog(
             autofocus: true,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: t.amountHint),
+            decoration: InputDecoration(
+              labelText: t.amountHint,
+              suffixText: amountSuffix,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
