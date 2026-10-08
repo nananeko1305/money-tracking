@@ -17,6 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # The app's "Share the app" QR code links to
+  # releases/latest/download/<APK_NAME> (lib/services/release_links.dart).
   APK_NAME: budget-tracker.apk
   FLUTTER_VERSION: 3.47.3
 

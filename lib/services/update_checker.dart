@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'release_links.dart';
 import 'semantic_version.dart';
 
 /// An available newer release of the app.
@@ -25,9 +26,6 @@ class AppUpdate {
 /// the latest release tag starts with (`v<version>-build.<n>`; the build
 /// suffix only serves installs from before semantic versions).
 class UpdateChecker {
-  static const String _latestApi =
-      'https://api.github.com/repos/nananeko1305/money-tracking/releases/latest';
-
   final http.Client _client;
 
   UpdateChecker({http.Client? client}) : _client = client ?? http.Client();
@@ -37,7 +35,7 @@ class UpdateChecker {
       final info = await PackageInfo.fromPlatform();
 
       final res = await _client.get(
-        Uri.parse(_latestApi),
+        Uri.parse(ReleaseLinks.latestApi),
         headers: {'Accept': 'application/vnd.github+json'},
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode != 200) return null;

@@ -16,6 +16,7 @@ class AppDrawer extends StatelessWidget {
   final Future<void> Function() onImport;
   final VoidCallback onHowItWorks;
   final VoidCallback onChecklists;
+  final VoidCallback onShareApp;
   final String? accountEmail;
   final VoidCallback onChangePassword;
   final VoidCallback onSignOut;
@@ -28,6 +29,7 @@ class AppDrawer extends StatelessWidget {
     required this.onImport,
     required this.onHowItWorks,
     required this.onChecklists,
+    required this.onShareApp,
     required this.accountEmail,
     required this.onChangePassword,
     required this.onSignOut,
@@ -142,6 +144,14 @@ class AppDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 onHowItWorks();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.qr_code_2),
+              title: Text(t.shareApp),
+              onTap: () {
+                Navigator.pop(context);
+                onShareApp();
               },
             ),
             const SizedBox(height: 12),
