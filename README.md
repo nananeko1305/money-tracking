@@ -30,6 +30,8 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
   back.
 - **Update notifications** — every new release sends a push notification
   (Firebase Cloud Messaging); tapping it offers the APK download.
+- **Share the app** — from the drawer: a QR code (and a copyable link) to the
+  newest APK, for installing on another phone.
 - **Drawer** — navigation plus all options (export/import, language, theme).
 - **Themes** — light and dark, green/gold palette (green like paper money,
   gold like gold); System / Light / Dark, remembered between launches.
