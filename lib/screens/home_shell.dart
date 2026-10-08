@@ -21,6 +21,7 @@ import '../widgets/change_password_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/load_error_view.dart';
 import '../widgets/local_data_prompt.dart';
+import '../widgets/share_app_dialog.dart';
 import '../widgets/update_prompt.dart';
 import 'checklists_screen.dart';
 import 'dashboard_screen.dart';
@@ -180,6 +181,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         onImport: () => _backup.importData(context, _storage),
         onHowItWorks: _showOnboarding,
         onChecklists: _openChecklists,
+        onShareApp: () => showShareAppDialog(context),
         accountEmail: widget.session.email,
         onChangePassword: () => showChangePasswordDialog(context, widget.auth),
         onSignOut: _signOut,
