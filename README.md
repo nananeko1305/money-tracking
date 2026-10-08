@@ -74,6 +74,22 @@ lib/
     └── category_card.dart           # Category card
 ```
 
+## Releases and versions
+
+Merging into `main` builds the release APK, publishes it on GitHub Releases
+and sends the update notification. The version is **major.minor.patch**,
+computed from the commit messages since the last release (Conventional
+Commits):
+
+- `feat!:` or a `BREAKING CHANGE` footer → **major** (2.0.0)
+- `feat:` → **minor** (1.1.0)
+- anything else (`fix:`, `chore:` …) → **patch** (1.0.1)
+
+The `version:` in `pubspec.yaml` is a floor: raise it by hand to force a bigger
+number. Release tags look like `v1.1.0-build.14`; the `-build.N` suffix is only
+there so installs from before semantic versions (which compare build numbers)
+still find the update, and the app never shows it.
+
 ## Running
 
 ```bash

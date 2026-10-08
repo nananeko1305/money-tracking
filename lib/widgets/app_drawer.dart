@@ -312,7 +312,7 @@ class _VersionLabel extends StatelessWidget {
         final info = snapshot.data;
         final label = info == null
             ? ''
-            : 'v${info.version} (${info.buildNumber})';
+            : 'v${info.version}';
         return Text(label, style: style);
       },
     );
