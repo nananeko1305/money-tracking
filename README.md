@@ -17,6 +17,10 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
   Net savings for the month count against the monthly income.
 - **Loans** — who owes you and whom you owe, with repayments, what is left and
   the net balance; settled loans are kept in a collapsed section.
+- **Lists** — from the drawer: named checklists (groceries, a trip, car
+  parts) with items, an optional planned amount each and a tick when bought or
+  done; the total and what is left sit on top. Lists are plans: they stay out
+  of the budget and the reports, and nothing on them resets by itself.
 - **Reports** — monthly archive (last 12 months), saved automatically on the
   1st of each month.
 - **Transaction history** — every expense is stored individually (amount,

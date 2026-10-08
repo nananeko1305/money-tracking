@@ -86,6 +86,17 @@ AppData _sample() => AppData.fromJson({
           ],
         },
       ],
+      'checklists': [
+        {
+          'id': 'k1',
+          'name': 'Market',
+          'createdAt': '2026-10-01T09:00:00.000',
+          'items': [
+            {'id': 'i1', 'name': 'Mleko', 'amount': 200, 'done': true, 'createdAt': '2026-10-01T09:01:00.000'},
+            {'id': 'i2', 'name': 'Kesa', 'amount': 0, 'done': false, 'createdAt': '2026-10-01T09:02:00.000'},
+          ],
+        },
+      ],
     });
 
 void main() {
@@ -101,6 +112,8 @@ void main() {
         everyElement('2026-10'));
     expect(docs[UserCollections.categoriesName].first.containsKey('spent'),
         isFalse);
+    expect(docs[UserCollections.checklistItemsName].map((d) => d['listId']),
+        everyElement('k1'));
 
     final back = decoder.decode(docs, fallbackMonth: '2026-10');
     expect(back.toJson(), data.toJson());

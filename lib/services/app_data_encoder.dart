@@ -1,5 +1,7 @@
 import '../models/app_data.dart';
 import '../models/category.dart';
+import '../models/checklist.dart';
+import '../models/checklist_item.dart';
 import '../models/fixed_cost.dart';
 import '../models/loan.dart';
 import '../models/month_key.dart';
@@ -51,6 +53,11 @@ class AppDataEncoder {
 
   Map<String, dynamic> report(MonthlyReport r) => r.toJson();
 
+  Map<String, dynamic> checklist(Checklist c) => c.toJson()..remove('items');
+
+  Map<String, dynamic> checklistItem(ChecklistItem i, {required String listId}) =>
+      {...i.toJson(), 'listId': listId};
+
   /// Every document [data] maps to. The live transactions of its categories
   /// belong to the budget month its lastResetDate falls in.
   UserDocuments encode(AppData data) {
@@ -84,6 +91,13 @@ class AppDataEncoder {
         ],
         UserCollections.reportsName: [
           for (final r in data.monthlyReports) report(r),
+        ],
+        UserCollections.checklistsName: [
+          for (final c in data.checklists) checklist(c),
+        ],
+        UserCollections.checklistItemsName: [
+          for (final c in data.checklists)
+            for (final i in c.items) checklistItem(i, listId: c.id),
         ],
       },
     );

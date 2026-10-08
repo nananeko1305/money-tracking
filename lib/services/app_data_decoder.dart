@@ -1,5 +1,7 @@
 import '../models/app_data.dart';
 import '../models/category.dart';
+import '../models/checklist.dart';
+import '../models/checklist_item.dart';
 import '../models/fixed_cost.dart';
 import '../models/loan.dart';
 import '../models/month_key.dart';
@@ -22,12 +24,19 @@ class AppDataDecoder {
     final profile = docs.profile;
     final month = (profile?['currentMonth'] as String?) ?? fallbackMonth;
 
-    final expenses = _children(docs[UserCollections.expensesName], 'categoryId',
+    final expenses = _transactions(
+        docs[UserCollections.expensesName], 'categoryId',
         where: (doc) => doc['month'] == month);
     final entries =
-        _children(docs[UserCollections.savingsEntriesName], 'fundId');
+        _transactions(docs[UserCollections.savingsEntriesName], 'fundId');
     final repayments =
-        _children(docs[UserCollections.loanRepaymentsName], 'loanId');
+        _transactions(docs[UserCollections.loanRepaymentsName], 'loanId');
+    final items = _grouped(
+      docs[UserCollections.checklistItemsName],
+      'listId',
+      ChecklistItem.fromJson,
+      (a, b) => _byThenId(a.createdAt, b.createdAt, a.id, b.id),
+    );
 
     final categories =
         _parse(docs[UserCollections.categoriesName], Category.fromJson)
@@ -61,6 +70,13 @@ class AppDataDecoder {
         _parse(docs[UserCollections.reportsName], MonthlyReport.fromJson)
           ..sort((a, b) => b.month.compareTo(a.month));
 
+    final checklists =
+        _parse(docs[UserCollections.checklistsName], Checklist.fromJson)
+          ..sort((a, b) => _byThenId(a.createdAt, b.createdAt, a.id, b.id));
+    for (final c in checklists) {
+      c.items = items[c.id] ?? [];
+    }
+
     return AppData(
       currentCategories: categories,
       monthlyReports: reports,
@@ -69,25 +85,39 @@ class AppDataDecoder {
       monthlyIncome: (profile?['monthlyIncome'] as num?)?.toDouble() ?? 0,
       savingsFunds: funds,
       loans: loans,
+      checklists: checklists,
     );
   }
 
   /// Transactions grouped by the parent id stored under [parentKey], each
   /// group sorted by date.
-  static Map<String, List<Transaction>> _children(
+  static Map<String, List<Transaction>> _transactions(
     List<Map<String, dynamic>> docs,
     String parentKey, {
     bool Function(Map<String, dynamic> doc)? where,
+  }) =>
+      _grouped(docs, parentKey, Transaction.fromJson,
+          (a, b) => _byThenId(a.date, b.date, a.id, b.id),
+          where: where);
+
+  /// Documents grouped by the parent id stored under [parentKey], each group
+  /// sorted with [compare].
+  static Map<String, List<T>> _grouped<T>(
+    List<Map<String, dynamic>> docs,
+    String parentKey,
+    T Function(Map<String, dynamic>) fromJson,
+    int Function(T, T) compare, {
+    bool Function(Map<String, dynamic> doc)? where,
   }) {
-    final groups = <String, List<Transaction>>{};
+    final groups = <String, List<T>>{};
     for (final doc in docs) {
       final parent = doc[parentKey];
       if (parent is! String || (where != null && !where(doc))) continue;
-      final t = _tryParse(doc, Transaction.fromJson);
-      if (t != null) groups.putIfAbsent(parent, () => []).add(t);
+      final value = _tryParse(doc, fromJson);
+      if (value != null) groups.putIfAbsent(parent, () => []).add(value);
     }
     for (final list in groups.values) {
-      list.sort((a, b) => _byThenId(a.date, b.date, a.id, b.id));
+      list.sort(compare);
     }
     return groups;
   }
