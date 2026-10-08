@@ -25,6 +25,10 @@ mixin LoanStringsSr implements LoanStrings {
   @override
   String get loanAmountHint => 'npr. 10000';
   @override
+  String get dinars => 'Dinari';
+  @override
+  String get euros => 'Evri';
+  @override
   String get loanNoteHint => 'Napomena (opciono)';
   @override
   String get loanRepaid => 'Vraćeno:';

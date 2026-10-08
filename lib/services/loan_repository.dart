@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show Listenable;
 
 import '../models/loan.dart';
 import '../models/loan_direction.dart';
+import '../models/money_currency.dart';
 import '../models/transaction.dart';
 import 'app_data_encoder.dart';
 import 'batch_commits.dart';
@@ -36,12 +37,14 @@ class LoanRepository {
     required String person,
     required LoanDirection direction,
     required double amount,
+    MoneyCurrency currency = MoneyCurrency.rsd,
     String note = '',
   }) async {
     final loan = Loan(
       id: _ids.next(),
       person: person,
       direction: direction,
+      currency: currency,
       amount: amount,
       note: note.trim(),
       date: DateTime.now().toIso8601String(),
@@ -54,12 +57,14 @@ class LoanRepository {
     String id, {
     String? person,
     LoanDirection? direction,
+    MoneyCurrency? currency,
     double? amount,
     String? note,
   }) async {
     _write(_docs.loans.doc(id).update({
       'person': ?person,
       if (direction != null) 'direction': direction.name,
+      if (currency != null) 'currency': currency.name,
       'amount': ?amount,
       if (note != null) 'note': note.trim(),
     }));

@@ -112,4 +112,42 @@ void main() {
     expect(find.text('4.000 din'), findsOneWidget); // repaid
     expect(find.text('+6.000 din'), findsOneWidget); // net balance
   });
+
+  testWidgets('loans in euros are totalled apart from dinars', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.byIcon(Icons.handshake));
+    await tester.pumpAndSettle();
+
+    await tapText(tester, 'Dodaj pozajmicu');
+    var fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Marko');
+    await tester.enterText(fields.at(1), '10000');
+    await tapText(tester, 'Sačuvaj');
+
+    await tapText(tester, 'Dodaj pozajmicu');
+    await tapText(tester, 'Ja dugujem');
+    fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Banka');
+    await tester.enterText(fields.at(1), '500');
+    await tapText(tester, 'Evri');
+    expect(find.text('€'), findsOneWidget); // the amount field's suffix
+    await tapText(tester, 'Sačuvaj');
+
+    expect(find.text('+10.000 din'), findsOneWidget); // net in dinars
+    expect(find.text('-500 €'), findsOneWidget); // net in euros
+
+    // A repayment is entered in the loan's own currency.
+    await tester.ensureVisible(find.text('Vraćanje').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Vraćanje').last);
+    await tester.pumpAndSettle();
+    expect(find.text('€'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '200');
+    await tapText(tester, 'Sačuvaj');
+    // Back up to the summary card.
+    await tester.dragUntilVisible(find.text('-300 €'),
+        find.byType(ListView).hitTestable().first, const Offset(0, 300));
+    expect(find.text('-300 €'), findsOneWidget);
+    expect(find.text('+10.000 din'), findsOneWidget);
+  });
 }
