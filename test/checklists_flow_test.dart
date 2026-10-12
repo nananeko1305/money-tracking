@@ -35,7 +35,6 @@ void main() {
       firestore: FakeFirebaseFirestore(),
     ));
     await tester.pumpAndSettle();
-    await tapText(tester, 'Ne sada'); // empty account: no backup restore
 
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();

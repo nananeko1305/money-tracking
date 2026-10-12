@@ -5,8 +5,9 @@ import '../models/savings_fund.dart';
 import '../theme.dart';
 import 'amount_row.dart';
 
-/// A single savings fund: its balance, progress toward the goal (if any) and
-/// buttons to deposit or withdraw. Tapping the header opens the history.
+/// A single savings fund: its balance in each currency it holds, progress
+/// toward the goal (if any) and buttons to deposit or withdraw. Tapping the
+/// header opens the history.
 class SavingsFundCard extends StatelessWidget {
   final SavingsFund fund;
   final VoidCallback onTap;
@@ -44,8 +45,11 @@ class SavingsFundCard extends StatelessWidget {
         children: [
           _header(context, color, pal),
           const SizedBox(height: 8),
-          AmountRow(t.savingsBalance, t.money(fund.balance, fund.currency),
-              color: pal.positive, emphasized: true),
+          // One line per currency; the label only on the first.
+          for (final (i, c) in fund.currencies.indexed)
+            AmountRow(
+                i == 0 ? t.savingsBalance : '', t.money(fund.balanceIn(c), c),
+                color: pal.positive, emphasized: true),
           if (fund.hasTarget) ..._goal(context, color, pal),
           const SizedBox(height: 12),
           Row(

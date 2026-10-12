@@ -7,13 +7,10 @@ import '../theme.dart';
 import 'drawer_account_section.dart';
 
 /// The navigation drawer: section navigation (plus the checklists screen),
-/// data import / export, the account (password, sign out) and the language /
-/// theme settings.
+/// the account (password, sign out) and the language / theme settings.
 class AppDrawer extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
-  final Future<void> Function() onExport;
-  final Future<void> Function() onImport;
   final VoidCallback onHowItWorks;
   final VoidCallback onChecklists;
   final VoidCallback onShareApp;
@@ -25,8 +22,6 @@ class AppDrawer extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.onSelect,
-    required this.onExport,
-    required this.onImport,
     required this.onHowItWorks,
     required this.onChecklists,
     required this.onShareApp,
@@ -107,24 +102,6 @@ class AppDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 onChecklists();
-              },
-            ),
-            const Divider(),
-            _sectionLabel(t.dataSection),
-            ListTile(
-              leading: const Icon(Icons.upload_file),
-              title: Text(t.exportData),
-              onTap: () {
-                Navigator.pop(context);
-                onExport();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.download),
-              title: Text(t.importData),
-              onTap: () {
-                Navigator.pop(context);
-                onImport();
               },
             ),
             const Divider(),

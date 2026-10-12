@@ -14,10 +14,12 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Fixed costs** — recurring monthly items (rent, utilities, subscriptions)
   with their amounts and the monthly total; kept across months. They come out
   of the monthly income in full every month.
-- **Savings** — funds (e.g. emergency fund, holiday) in dinars or euros, with
-  an optional opening balance and goal; record deposits and withdrawals, with
-  history per fund. Net dinar savings for the month count against the monthly
-  income; euro funds are totalled on their own (there is no exchange rate).
+- **Savings** — funds (e.g. emergency fund, holiday); one fund can hold dinars
+  and euros at once, each with its own balance and optional opening balance.
+  The optional goal is in one currency and counts only that currency's
+  balance. Deposits and withdrawals pick their currency (the goal's by
+  default), with history per fund. The month's net savings in each currency
+  count against that currency's income (there is no exchange rate).
 - **Loans** — who owes you and whom you owe, in dinars or euros, with
   repayments, what is left and the net balance per currency; settled loans are
   kept in a collapsed section.
@@ -30,13 +32,12 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Transaction history** — every expense is stored individually (amount,
   description, date); tap a category to see the list, swipe left to delete.
 - **Category editing** — edit button to change a category's name and budget.
-- **Export / Import** — from the drawer; back up to a JSON file and import it
-  back.
 - **Update notifications** — every new release sends a push notification
   (Firebase Cloud Messaging); tapping it offers the APK download.
 - **Share the app** — from the drawer: a QR code (and a copyable link) to the
   newest APK, for installing on another phone.
-- **Drawer** — navigation plus all options (export/import, language, theme).
+- **Drawer** — navigation plus all options (lists, account, language, theme,
+  sharing the app).
 - **Themes** — light and dark, green/gold palette (green like paper money,
   gold like gold); System / Light / Dark, remembered between launches.
 - **Languages** — Serbian (Latin) and English, toggled from the drawer and
@@ -60,7 +61,9 @@ Data recorded before currencies existed reads as dinars.
 - **Data lives in Cloud Firestore** under `users/{uid}/…` (project
   `money-tracking-261007`, location `europe-west3`), so the same account sees
   the same data on every phone. Firestore keeps an offline cache: the app works
-  without a connection and syncs when it is back.
+  without a connection and syncs when it is back. There is no file export or
+  import: the account is the backup, so the app needs no access to the phone's
+  files.
 - **Security rules** (`firestore.rules`) let an account read and write only its
   own documents. Deploy after changing them:
   `firebase deploy --only firestore --project money-tracking-261007`.
@@ -79,8 +82,7 @@ lib/
 ├── l10n/strings.dart                # Localized strings + locale-aware formatting
 ├── models/budget.dart               # Category, Transaction, MonthlyReport, AppData
 ├── services/
-│   ├── storage.dart                 # Persistence + monthly reset
-│   └── backup.dart                  # Export (share) / import (file picker)
+│   └── storage.dart                 # Persistence + monthly reset
 ├── screens/
 │   ├── dashboard_screen.dart        # "Budget" screen
 │   ├── reports_screen.dart          # "Reports" screen

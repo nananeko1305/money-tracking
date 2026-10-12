@@ -33,8 +33,6 @@ void main() {
       firestore: FakeFirebaseFirestore(),
     ));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Ne sada').last); // empty account
-    await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();

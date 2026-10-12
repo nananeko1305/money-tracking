@@ -12,7 +12,7 @@ import 'user_collections.dart';
 import 'user_documents.dart';
 
 /// Turns app models into the Firestore documents of an account. Documents keep
-/// the models' own JSON shape, so backups and migrations need no conversion,
+/// the models' own JSON shape, so the on-phone data moves over unconverted,
 /// and add only what the flat layout needs: the parent id of an entry, the
 /// budget month of an expense and the list position of a fixed cost.
 class AppDataEncoder {
