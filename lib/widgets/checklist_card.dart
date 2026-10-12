@@ -76,9 +76,9 @@ class ChecklistCard extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 4),
-                    AmountRow(t.checklistTotal, t.din(list.total)),
+                    AmountRow(t.checklistTotal, t.money(list.total, list.currency)),
                     const SizedBox(height: 4),
-                    AmountRow(t.remaining, t.din(list.left),
+                    AmountRow(t.remaining, t.money(list.left, list.currency),
                         color: pal.spent),
                     const SizedBox(height: 10),
                     ClipRRect(

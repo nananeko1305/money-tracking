@@ -85,15 +85,15 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
           ),
           child: Column(
             children: [
-              AmountRow(t.savingsBalance, t.din(fund.balance),
+              AmountRow(t.savingsBalance, t.money(fund.balance, fund.currency),
                   color: pal.positive, emphasized: true),
               if (fund.openingBalance > 0) ...[
                 const SizedBox(height: 6),
-                AmountRow(t.openingBalance, t.din(fund.openingBalance)),
+                AmountRow(t.openingBalance, t.money(fund.openingBalance, fund.currency)),
               ],
               if (fund.hasTarget) ...[
                 const SizedBox(height: 6),
-                AmountRow(t.savingsGoal, t.din(fund.target)),
+                AmountRow(t.savingsGoal, t.money(fund.target, fund.currency)),
               ],
             ],
           ),
@@ -107,7 +107,7 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
                 : e.amount >= 0
                     ? t.depositEntry
                     : t.withdrawalEntry,
-            amountOf: (e) => t.signedDin(e.amount),
+            amountOf: (e) => t.signedMoney(e.amount, fund.currency),
             colorOf: (e) => e.amount >= 0 ? pal.positive : pal.spent,
             onDelete: _deleteEntry,
           ),

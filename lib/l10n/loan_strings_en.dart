@@ -25,10 +25,6 @@ mixin LoanStringsEn implements LoanStrings {
   @override
   String get loanAmountHint => 'e.g. 10000';
   @override
-  String get dinars => 'Dinars';
-  @override
-  String get euros => 'Euros';
-  @override
   String get loanNoteHint => 'Note (optional)';
   @override
   String get loanRepaid => 'Repaid:';

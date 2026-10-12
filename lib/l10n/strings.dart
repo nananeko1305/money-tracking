@@ -114,6 +114,8 @@ abstract class AppStrings
 
   List<String> get monthNames;
   String get currency; // "din"
+  String get dinars; // currency selector labels
+  String get euros;
 
   // ---- Locale-specific phrases (implemented per language) ----
 
@@ -140,11 +142,6 @@ abstract class AppStrings
     if (d == null) return iso;
     return '${date(iso)} ${_two(d.hour)}:${_two(d.minute)}';
   }
-
-  String din(num value) => '${amount(value)} $currency';
-
-  /// [din] with an explicit '+' on positive values, for money flows.
-  String signedDin(num value) => value > 0 ? '+${din(value)}' : din(value);
 
   /// The short symbol of [c], also shown next to amount fields.
   String currencySymbol(MoneyCurrency c) => switch (c) {

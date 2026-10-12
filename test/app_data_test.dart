@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:budget_tracker/models/app_data.dart';
 import 'package:budget_tracker/models/loan.dart';
 import 'package:budget_tracker/models/loan_direction.dart';
+import 'package:budget_tracker/models/money_currency.dart';
 import 'package:budget_tracker/models/monthly_report.dart';
+import 'package:budget_tracker/models/report_totals.dart';
 import 'package:budget_tracker/models/savings_fund.dart';
 import 'package:budget_tracker/models/transaction.dart';
 
@@ -18,16 +20,16 @@ void main() {
           id: '2026-09',
           month: '2026-09',
           categories: [],
-          totalBudget: 0,
-          totalSpent: 0,
-          totalRemaining: 0,
           savedAt: '2026-10-01T00:00:00.000',
-          income: 120000,
-          saved: 15000,
+          totals: {
+            MoneyCurrency.rsd: ReportTotals(income: 120000, saved: 15000),
+            MoneyCurrency.eur: ReportTotals(budget: 300, spent: 120, income: 900),
+          },
         ),
       ],
       lastResetDate: '2026-10-01T00:00:00.000',
       monthlyIncome: 130000,
+      monthlyIncomeEur: 1000,
       savingsFunds: [
         SavingsFund(
           id: 'f',
@@ -62,8 +64,12 @@ void main() {
         jsonDecode(jsonEncode(data.toJson())) as Map<String, dynamic>);
 
     expect(copy.monthlyIncome, 130000);
-    expect(copy.monthlyReports.single.income, 120000);
-    expect(copy.monthlyReports.single.saved, 15000);
+    expect(copy.incomeIn(MoneyCurrency.eur), 1000);
+    final report = copy.monthlyReports.single;
+    expect(report.totalsIn(MoneyCurrency.rsd).income, 120000);
+    expect(report.totalsIn(MoneyCurrency.rsd).saved, 15000);
+    expect(report.totalsIn(MoneyCurrency.eur).income, 900);
+    expect(report.totalsIn(MoneyCurrency.eur).remaining, 180);
     final fund = copy.savingsFunds.single;
     expect(fund.target, 200000);
     expect(fund.openingBalance, 30000);
@@ -78,5 +84,6 @@ void main() {
   test('isEmpty is true only when nothing at all is recorded', () {
     expect(AppData.empty().isEmpty, isTrue);
     expect((AppData.empty()..monthlyIncome = 1).isEmpty, isFalse);
+    expect((AppData.empty()..monthlyIncomeEur = 1).isEmpty, isFalse);
   });
 }

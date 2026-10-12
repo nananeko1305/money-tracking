@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../l10n/amount_input.dart';
+import '../models/money_currency.dart';
 import '../models/savings_fund.dart';
+import 'currency_selector.dart';
 
 /// The values entered in the savings fund add / edit form.
 class SavingsFundFormResult {
   final String name;
   final double openingBalance;
   final double target;
-  const SavingsFundFormResult(this.name, this.openingBalance, this.target);
+  final MoneyCurrency currency;
+  const SavingsFundFormResult(
+      this.name, this.openingBalance, this.target, this.currency);
 }
 
 /// Shows the add / edit savings fund dialog. Returns the entered values, or
@@ -29,44 +33,56 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
 
   double? optionalAmount(TextEditingController c) =>
       c.text.trim().isEmpty ? 0 : parseAmountInput(c.text);
+  var currency = existing?.currency ?? MoneyCurrency.rsd;
 
   return showDialog<SavingsFundFormResult>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(existing == null ? t.newSavings : t.editSavings),
       content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: t.name,
-                hintText: t.savingsNameHint,
+        // One builder for the whole form: the amount fields' currency suffix
+        // follows the currency selector.
+        child: StatefulBuilder(
+          builder: (_, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: t.name,
+                  hintText: t.savingsNameHint,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: openingController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: t.openingBalanceLabel,
-                helperText: t.openingBalanceHelp,
+              const SizedBox(height: 12),
+              CurrencySelector(
+                selected: currency,
+                onChanged: (c) => setState(() => currency = c),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: targetController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: t.savingsGoalLabel,
-                hintText: t.savingsGoalHint,
+              const SizedBox(height: 12),
+              TextField(
+                controller: openingController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: t.openingBalanceLabel,
+                  helperText: t.openingBalanceHelp,
+                  suffixText: t.currencySymbol(currency),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: targetController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: t.savingsGoalLabel,
+                  hintText: t.savingsGoalHint,
+                  suffixText: t.currencySymbol(currency),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -89,7 +105,8 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
               );
               return;
             }
-            Navigator.pop(ctx, SavingsFundFormResult(name, opening, target));
+            Navigator.pop(
+                ctx, SavingsFundFormResult(name, opening, target, currency));
           },
           child: Text(t.save),
         ),

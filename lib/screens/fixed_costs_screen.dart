@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../l10n/strings.dart';
+import '../models/currency_sums.dart';
 import '../models/fixed_cost.dart';
 import '../services/fixed_cost_repository.dart';
 import '../theme.dart';
@@ -48,12 +49,12 @@ class FixedCostsScreenState extends State<FixedCostsScreen> {
     });
   }
 
-  double get _total => _costs.fold(0.0, (s, c) => s + c.amount);
 
   Future<void> _addCost() async {
     final result = await showFixedCostFormDialog(context);
     if (result == null) return;
-    await widget.storage.addFixedCost(result.name, result.amount);
+    await widget.storage
+        .addFixedCost(result.name, result.amount, currency: result.currency);
     await reload();
   }
 
@@ -61,7 +62,10 @@ class FixedCostsScreenState extends State<FixedCostsScreen> {
     final result = await showFixedCostFormDialog(context, existing: cost);
     if (result == null) return;
     await widget.storage
-        .updateFixedCost(cost.id, name: result.name, amount: result.amount);
+        .updateFixedCost(cost.id,
+            name: result.name,
+            amount: result.amount,
+            currency: result.currency);
     await reload();
   }
 
@@ -97,7 +101,9 @@ class FixedCostsScreenState extends State<FixedCostsScreen> {
           if (_costs.isEmpty)
             _emptyHint(context, t)
           else ...[
-            FixedCostsTotalCard(total: _total),
+            FixedCostsTotalCard(
+                totals: sumByCurrency(
+                    _costs, (c) => c.currency, (c) => c.amount)),
             const SizedBox(height: 16),
             ..._costs.map((cost) => FixedCostTile(
                   cost: cost,

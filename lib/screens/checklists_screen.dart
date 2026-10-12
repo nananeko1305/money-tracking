@@ -5,7 +5,7 @@ import '../models/checklist.dart';
 import '../services/checklist_repository.dart';
 import '../theme.dart';
 import '../widgets/checklist_card.dart';
-import '../widgets/checklist_name_dialog.dart';
+import '../widgets/checklist_form_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/empty_state.dart';
 import 'checklist_screen.dart';
@@ -49,13 +49,16 @@ class _ChecklistsScreenState extends State<ChecklistsScreen> {
   }
 
   Future<void> _add() async {
-    final name = await showChecklistNameDialog(context);
-    if (name != null) await widget.storage.addChecklist(name);
+    final result = await showChecklistFormDialog(context);
+    if (result == null) return;
+    await widget.storage.addChecklist(result.name, currency: result.currency);
   }
 
   Future<void> _rename(Checklist list) async {
-    final name = await showChecklistNameDialog(context, existing: list);
-    if (name != null) await widget.storage.renameChecklist(list.id, name);
+    final result = await showChecklistFormDialog(context, existing: list);
+    if (result == null) return;
+    await widget.storage.updateChecklist(list.id,
+        name: result.name, currency: result.currency);
   }
 
   Future<void> _delete(Checklist list) async {

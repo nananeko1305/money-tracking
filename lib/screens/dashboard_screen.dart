@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../models/budget_totals.dart';
 import '../models/category.dart';
+import '../models/income_totals.dart';
+import '../models/money_currency.dart';
 import '../services/budget_repository.dart';
 import '../services/savings_repository.dart';
 import '../theme.dart';
@@ -30,8 +33,8 @@ class DashboardScreen extends StatefulWidget {
 
 class DashboardScreenState extends State<DashboardScreen> {
   List<Category> _categories = [];
-  double _income = 0;
-  double _savedThisMonth = 0;
+  Map<MoneyCurrency, double> _incomes = const {};
+  Map<MoneyCurrency, double> _savedThisMonth = const {};
   int _daysRemaining = 0;
   bool _loading = true;
 
@@ -52,40 +55,41 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> reload() async {
     final cats = await widget.storage.currentCategories();
-    final income = await widget.storage.monthlyIncome();
+    final incomes = await widget.storage.monthlyIncomes();
     final saved = await widget.savings.netSavedInMonth(DateTime.now());
     if (!mounted) return;
     setState(() {
       _categories = cats;
-      _income = income;
+      _incomes = incomes;
       _savedThisMonth = saved;
       _daysRemaining = widget.storage.daysUntilReset();
       _loading = false;
     });
   }
 
-  double get _totalBudget => _categories.fold(0.0, (s, c) => s + c.budget);
-  double get _totalSpent => _categories.fold(0.0, (s, c) => s + c.spent);
-
   Future<void> _editIncome() async {
-    final income = await showIncomeDialog(context, current: _income);
-    if (income == null) return;
-    await widget.storage.setMonthlyIncome(income);
+    final incomes = await showIncomeDialog(context, current: _incomes);
+    if (incomes == null) return;
+    await widget.storage.setMonthlyIncome(
+      rsd: incomes[MoneyCurrency.rsd] ?? 0,
+      eur: incomes[MoneyCurrency.eur] ?? 0,
+    );
     await reload();
   }
 
   Future<void> _addCategory() async {
     final result = await showCategoryFormDialog(context);
     if (result == null) return;
-    await widget.storage.addCategory(result.name, result.budget);
+    await widget.storage
+        .addCategory(result.name, result.budget, currency: result.currency);
     await reload();
   }
 
   Future<void> _editCategory(Category category) async {
     final result = await showCategoryFormDialog(context, existing: category);
     if (result == null) return;
-    await widget.storage
-        .updateCategory(category.id, name: result.name, budget: result.budget);
+    await widget.storage.updateCategory(category.id,
+        name: result.name, budget: result.budget, currency: result.currency);
     await reload();
   }
 
@@ -131,7 +135,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final totalRemaining = _totalBudget - _totalSpent;
+    final budgets = BudgetTotals.of(_categories);
 
     return RefreshIndicator(
       onRefresh: reload,
@@ -141,19 +145,16 @@ class DashboardScreenState extends State<DashboardScreen> {
           DaysBanner(text: t.daysUntilReset(_daysRemaining)),
           const SizedBox(height: 16),
           IncomeCard(
-            income: _income,
-            allocated: _totalBudget,
-            spent: _totalSpent,
-            savedThisMonth: _savedThisMonth,
+            totals: IncomeTotals.of(
+              incomeIn: (c) => _incomes[c] ?? 0,
+              budgets: budgets,
+              saved: _savedThisMonth,
+            ),
             onEdit: _editIncome,
           ),
           const SizedBox(height: 16),
           if (_categories.isNotEmpty) ...[
-            TotalsCard(
-              totalBudget: _totalBudget,
-              totalSpent: _totalSpent,
-              totalRemaining: totalRemaining,
-            ),
+            TotalsCard(totals: budgets),
             const SizedBox(height: 16),
           ],
           ..._categories.map((category) => CategoryCard(

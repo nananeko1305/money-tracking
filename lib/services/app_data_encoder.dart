@@ -18,11 +18,18 @@ import 'user_documents.dart';
 class AppDataEncoder {
   const AppDataEncoder();
 
+  /// The account's own document. Writing it replaces it whole on import, so
+  /// it lists every field the profile has.
   Map<String, dynamic> profile({
     required String currentMonth,
     required double monthlyIncome,
+    required double monthlyIncomeEur,
   }) =>
-      {'currentMonth': currentMonth, 'monthlyIncome': monthlyIncome};
+      {
+        'currentMonth': currentMonth,
+        'monthlyIncome': monthlyIncome,
+        'monthlyIncomeEur': monthlyIncomeEur,
+      };
 
   Map<String, dynamic> category(Category c) => c.toJson()
     ..remove('transactions')
@@ -64,7 +71,11 @@ class AppDataEncoder {
     final month =
         monthKey(DateTime.tryParse(data.lastResetDate) ?? DateTime.now());
     return UserDocuments(
-      profile: profile(currentMonth: month, monthlyIncome: data.monthlyIncome),
+      profile: profile(
+        currentMonth: month,
+        monthlyIncome: data.monthlyIncome,
+        monthlyIncomeEur: data.monthlyIncomeEur,
+      ),
       collections: {
         UserCollections.categoriesName: [
           for (final c in data.currentCategories) category(c),

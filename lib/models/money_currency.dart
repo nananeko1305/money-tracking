@@ -1,6 +1,7 @@
-/// The currency an amount is kept in. The monthly budget is always in dinars;
-/// loans can also be in euros. Amounts in different currencies are never
-/// added together, and there is no exchange rate.
+/// The currency an amount is kept in. Everything that holds money (categories
+/// and their expenses, income, fixed costs, savings, loans, lists) is in
+/// dinars or euros. Amounts in different currencies are never added
+/// together, and there is no exchange rate: totals are kept per currency.
 enum MoneyCurrency {
   rsd,
   eur;

@@ -1,6 +1,7 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:budget_tracker/models/money_currency.dart';
 import 'package:budget_tracker/models/month_key.dart';
 import 'package:budget_tracker/services/budget_repository.dart';
 import 'package:budget_tracker/services/savings_repository.dart';
@@ -17,7 +18,11 @@ void main() {
     await openFakeSession(firestore: db, clock: () => now);
 
     final profile = await db.collection('users').doc(testUid).get();
-    expect(profile.data(), {'currentMonth': '2026-09', 'monthlyIncome': 0});
+    expect(profile.data(), {
+      'currentMonth': '2026-09',
+      'monthlyIncome': 0,
+      'monthlyIncomeEur': 0,
+    });
   });
 
   test('closing archives the month once and starts the next', () async {
@@ -29,7 +34,7 @@ void main() {
     final budget = BudgetRepository(session);
     final savings = SavingsRepository(session);
 
-    await budget.setMonthlyIncome(120000);
+    await budget.setMonthlyIncome(rsd: 120000, eur: 0);
     final food = await budget.addCategory('Hrana', 40000);
     await budget.addExpense(food.id, 1500, 'pijaca');
     final fund = await savings.addFund('Hitni fond');
@@ -43,9 +48,10 @@ void main() {
 
     final report = (await budget.monthlyReports()).single;
     expect(report.month, open);
-    expect(report.totalSpent, 1500);
-    expect(report.income, 120000);
-    expect(report.saved, 10000);
+    final dinars = report.totalsIn(MoneyCurrency.rsd);
+    expect(dinars.spent, 1500);
+    expect(dinars.income, 120000);
+    expect(dinars.saved, 10000);
     expect(report.categories.single.transactions.single.description, 'pijaca');
 
     expect(session.live.openMonth, monthKey(now));

@@ -4,6 +4,7 @@ import '../app_scope.dart';
 import '../l10n/amount_input.dart';
 import '../models/category.dart';
 import '../theme.dart';
+import 'amount_row.dart';
 
 /// A single category card on the dashboard: budget summary, progress bar and an
 /// inline expense entry field.
@@ -115,15 +116,15 @@ class _CategoryCardState extends State<CategoryCard> {
             ),
           ),
           const SizedBox(height: 8),
-          _infoRow(t.budget, t.din(category.budget), null),
+          _infoRow(t.budget, t.money(category.budget, category.currency), null),
           _infoRow(
             t.spent,
-            '${t.din(category.spent)} (${percent.toStringAsFixed(0)}%)',
+            '${t.money(category.spent, category.currency)} (${percent.toStringAsFixed(0)}%)',
             pal.spent,
           ),
           _infoRow(
             t.remaining,
-            t.din(remaining),
+            t.money(remaining, category.currency),
             remaining < 0 ? pal.danger : pal.positive,
           ),
           const SizedBox(height: 12),
@@ -186,18 +187,12 @@ class _CategoryCardState extends State<CategoryCard> {
     );
   }
 
+  /// The shared [AmountRow] lets the label give way, so a long amount never
+  /// overflows the card.
   Widget _infoRow(String label, String value, Color? color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 14)),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w600, color: color)),
-        ],
-      ),
+      child: AmountRow(label, value, color: color),
     );
   }
 }

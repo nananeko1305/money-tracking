@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/checklist_item.dart';
+import '../models/money_currency.dart';
 import '../theme.dart';
 
 /// One row of a checklist: a checkbox to tick it off, the name (crossed out
@@ -9,6 +10,7 @@ import '../theme.dart';
 /// the editor.
 class ChecklistItemTile extends StatelessWidget {
   final ChecklistItem item;
+  final MoneyCurrency currency; // the list's
   final ValueChanged<bool> onToggle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -16,6 +18,7 @@ class ChecklistItemTile extends StatelessWidget {
   const ChecklistItemTile({
     super.key,
     required this.item,
+    required this.currency,
     required this.onToggle,
     required this.onEdit,
     required this.onDelete,
@@ -59,7 +62,7 @@ class ChecklistItemTile extends StatelessWidget {
               ),
               if (item.amount > 0)
                 Text(
-                  t.din(item.amount),
+                  t.money(item.amount, currency),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

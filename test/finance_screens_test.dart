@@ -37,7 +37,8 @@ void main() {
     await pumpApp(tester);
 
     await tapText(tester, 'Unesi prihod');
-    await tester.enterText(find.byType(TextField).last, '120000');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Dinari'), '120000');
     await tapText(tester, 'Sačuvaj');
 
     // With no categories yet, income, unallocated and left are all equal.
@@ -59,6 +60,44 @@ void main() {
     await tester.enterText(fields.last, '40000');
     await tapText(tester, 'Sačuvaj');
     expect(find.text('80.000 din'), findsOneWidget); // unallocated
+  });
+
+  testWidgets('the dashboard keeps dinars and euros apart', (tester) async {
+    await pumpApp(tester);
+    await tapText(tester, 'Unesi prihod');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Dinari'), '120000');
+    await tester.enterText(find.widgetWithText(TextField, 'Evri'), '1000');
+    await tapText(tester, 'Sačuvaj');
+    expect(find.text('120.000 din'), findsNWidgets(3));
+    expect(find.text('1.000 €'), findsNWidgets(3));
+
+    // A category in euros comes out of the euro income only.
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Dodaj kategoriju');
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(fields.evaluate().length - 2), 'More');
+    await tester.enterText(fields.last, '500');
+    await tapText(tester, 'Evri');
+    await tapText(tester, 'Sačuvaj');
+    expect(find.text('120.000 din'), findsNWidgets(3)); // dinars untouched
+    expect(find.text('500 €'), findsWidgets); // allocated, unallocated, ...
+
+    // An expense in the euro category, entered on its card.
+    final amount = find.widgetWithText(TextField, 'Iznos');
+    await tester.dragUntilVisible(amount,
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    await tester.enterText(amount, '120');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    await tester.dragUntilVisible(find.text('880 €'),
+        find.byType(ListView).hitTestable().first, const Offset(0, 300));
+    expect(find.text('880 €'), findsOneWidget); // left of the euro income
+    expect(find.text('120 € (24%)', skipOffstage: false), findsOneWidget);
+    expect(find.text('120.000 din'), findsNWidgets(3));
   });
 
   testWidgets('savings: add a fund, deposit and withdraw', (tester) async {
@@ -87,6 +126,37 @@ void main() {
     await tapText(tester, 'Podigni');
     expect(find.text('Na štednji nema toliko novca'), findsOneWidget);
     expect(find.text('60.000 din'), findsWidgets);
+  });
+
+  testWidgets('savings in euros are totalled apart and leave the income alone',
+      (tester) async {
+    await pumpApp(tester);
+    await tapText(tester, 'Unesi prihod');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Dinari'), '120000');
+    await tapText(tester, 'Sačuvaj');
+
+    await tester.tap(find.byIcon(Icons.savings));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Dodaj štednju');
+    await tester.enterText(find.byType(TextField).at(0), 'Devize');
+    await tapText(tester, 'Evri');
+    await tester.enterText(find.byType(TextField).at(1), '1000');
+    expect(find.text('€'), findsNWidgets(2)); // opening balance and goal
+    await tapText(tester, 'Sačuvaj');
+    expect(find.text('1.000 €'), findsWidgets);
+
+    await tapText(tester, 'Uplati');
+    expect(find.text('€'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '100');
+    await tapText(tester, 'Uplati');
+    expect(find.text('+100 €'), findsOneWidget); // this month, in euros
+    expect(find.text('1.100 €'), findsWidgets);
+
+    // The dinar income is untouched by the euro deposit.
+    await tester.tap(find.byIcon(Icons.account_balance_wallet));
+    await tester.pumpAndSettle();
+    expect(find.text('120.000 din'), findsNWidgets(3));
   });
 
   testWidgets('loans: add a loan, repay part, overview updates',
