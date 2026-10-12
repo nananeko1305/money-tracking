@@ -6,6 +6,7 @@ import '../models/loan.dart';
 import '../models/loan_direction.dart';
 import '../models/money_currency.dart';
 import '../theme.dart';
+import 'currency_selector.dart';
 
 /// The values entered in the loan add / edit form.
 class LoanFormResult {
@@ -25,13 +26,13 @@ Future<LoanFormResult?> showLoanFormDialog(
   Loan? existing,
 }) {
   final t = AppScope.of(context).strings;
-  final pal = palette(context);
   final personController = TextEditingController(text: existing?.person ?? '');
   final amountController = TextEditingController(
       text: existing != null ? amountInputText(existing.amount) : '');
   final noteController = TextEditingController(text: existing?.note ?? '');
   var direction = existing?.direction ?? LoanDirection.lent;
   var currency = existing?.currency ?? MoneyCurrency.rsd;
+  final pal = palette(context);
   final segmentStyle = SegmentedButton.styleFrom(
     selectedBackgroundColor: pal.green,
     selectedForegroundColor: Colors.white,
@@ -86,21 +87,9 @@ Future<LoanFormResult?> showLoanFormDialog(
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<MoneyCurrency>(
-                  showSelectedIcon: false,
-                  style: segmentStyle,
-                  segments: [
-                    ButtonSegment(
-                        value: MoneyCurrency.rsd, label: Text(t.dinars)),
-                    ButtonSegment(
-                        value: MoneyCurrency.eur, label: Text(t.euros)),
-                  ],
-                  selected: {currency},
-                  onSelectionChanged: (s) =>
-                      setState(() => currency = s.first),
-                ),
+              CurrencySelector(
+                selected: currency,
+                onChanged: (c) => setState(() => currency = c),
               ),
               const SizedBox(height: 12),
               TextField(

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show Listenable;
 
 import '../models/app_data.dart';
 import '../models/category.dart';
+import '../models/money_currency.dart';
 import '../models/monthly_report.dart';
 import '../models/transaction.dart';
 import 'app_data_encoder.dart';
@@ -54,20 +55,31 @@ class BudgetRepository {
   /// True when the account holds no data at all.
   Future<bool> isEmpty() async => (await _data()).isEmpty;
 
-  /// The money available for the month: salary plus any other income. 0 means
-  /// it has not been set.
-  Future<double> monthlyIncome() async => (await _data()).monthlyIncome;
+  /// The money available for the month in each currency: salary plus any
+  /// other income. 0 means it has not been set.
+  Future<Map<MoneyCurrency, double>> monthlyIncomes() async {
+    final data = await _data();
+    return {for (final c in MoneyCurrency.values) c: data.incomeIn(c)};
+  }
 
-  /// Sets the monthly income; 0 clears it. The value carries over to the next
-  /// months until it is changed.
-  Future<void> setMonthlyIncome(double income) async => _write(_docs.profile
-      .set({'monthlyIncome': income}, SetOptions(merge: true)));
+  /// Sets the monthly income in dinars and in euros; 0 clears one. The
+  /// values carry over to the next months until they are changed.
+  Future<void> setMonthlyIncome({required double rsd, required double eur}) async =>
+      _write(_docs.profile.set(
+        {'monthlyIncome': rsd, 'monthlyIncomeEur': eur},
+        SetOptions(merge: true),
+      ));
 
-  Future<Category> addCategory(String name, double budget) async {
+  Future<Category> addCategory(
+    String name,
+    double budget, {
+    MoneyCurrency currency = MoneyCurrency.rsd,
+  }) async {
     final category = Category(
       id: _ids.next(),
       name: name,
       budget: budget,
+      currency: currency,
       color: _palette.randomColor(),
       createdAt: DateTime.now().toIso8601String(),
     );
@@ -75,11 +87,13 @@ class BudgetRepository {
     return category;
   }
 
+  /// Changing the currency moves the category's expenses with it.
   Future<void> updateCategory(String id,
-      {String? name, double? budget}) async {
+      {String? name, double? budget, MoneyCurrency? currency}) async {
     _write(_docs.categories.doc(id).update({
       'name': ?name,
       'budget': ?budget,
+      if (currency != null) 'currency': currency.name,
     }));
   }
 

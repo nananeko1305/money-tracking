@@ -1,12 +1,15 @@
+import 'money_currency.dart';
 import 'transaction.dart';
 
-/// A budget category with its recorded transactions.
+/// A budget category with its recorded transactions, all in the category's
+/// [currency].
 class Category {
   final String id;
   String name;
   double budget;
   final String color;
   final String createdAt; // ISO date string
+  MoneyCurrency currency;
   List<Transaction> transactions;
 
   Category({
@@ -15,6 +18,7 @@ class Category {
     required this.budget,
     required this.color,
     required this.createdAt,
+    this.currency = MoneyCurrency.rsd,
     List<Transaction>? transactions,
   }) : transactions = transactions ?? [];
 
@@ -33,6 +37,7 @@ class Category {
         budget: (json['budget'] as num).toDouble(),
         color: json['color'] as String,
         createdAt: json['createdAt'] as String,
+        currency: MoneyCurrency.fromName(json['currency'] as String?),
         transactions: (json['transactions'] as List<dynamic>?)
                 ?.map((e) => Transaction.fromJson(e as Map<String, dynamic>))
                 .toList() ??
@@ -46,6 +51,7 @@ class Category {
         'spent': spent, // stored for report snapshots / interop
         'color': color,
         'createdAt': createdAt,
+        'currency': currency.name,
         'transactions': transactions.map((t) => t.toJson()).toList(),
       };
 
@@ -55,6 +61,7 @@ class Category {
         budget: budget,
         color: color,
         createdAt: createdAt,
+        currency: currency,
         transactions: transactions
             .map((t) => Transaction.fromJson(t.toJson()))
             .toList(),

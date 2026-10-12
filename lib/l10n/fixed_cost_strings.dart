@@ -5,6 +5,7 @@ mixin FixedCostStrings {
   // Bottom navigation label: the full name does not fit next to four tabs.
   String get navFixedCostsShort;
   String get fixedCostsTotal;
+  String get fixedCostsRow; // a row in the income card and the report
   String get addFixedCost;
   String get newFixedCost;
   String get editFixedCost;

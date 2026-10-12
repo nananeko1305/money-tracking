@@ -178,6 +178,10 @@ class StringsSr extends AppStrings
       ];
   @override
   String get currency => 'din';
+  @override
+  String get dinars => 'Dinari';
+  @override
+  String get euros => 'Evri';
 
   @override
   String daysUntilReset(int n) => '$n ${n == 1 ? 'dan' : 'dana'} do reseta';

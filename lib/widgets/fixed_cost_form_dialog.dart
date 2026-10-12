@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../l10n/amount_input.dart';
 import '../models/fixed_cost.dart';
+import '../models/money_currency.dart';
+import 'currency_selector.dart';
 
 /// The values entered in the fixed cost add / edit form.
 class FixedCostFormResult {
   final String name;
   final double amount;
-  const FixedCostFormResult(this.name, this.amount);
+  final MoneyCurrency currency;
+  const FixedCostFormResult(this.name, this.amount, this.currency);
 }
 
 /// Shows the add / edit fixed cost dialog. Returns the entered values, or null
@@ -22,33 +25,44 @@ Future<FixedCostFormResult?> showFixedCostFormDialog(
   final nameController = TextEditingController(text: existing?.name ?? '');
   final amountController = TextEditingController(
       text: existing != null ? amountInputText(existing.amount) : '');
+  var currency = existing?.currency ?? MoneyCurrency.rsd;
 
   return showDialog<FixedCostFormResult>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(existing == null ? t.newFixedCost : t.editFixedCost),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: nameController,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: t.name,
-              hintText: t.fixedCostNameHint,
+      // One builder for the whole form: the amount's currency suffix follows
+      // the currency selector.
+      content: StatefulBuilder(
+        builder: (_, setState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: t.name,
+                hintText: t.fixedCostNameHint,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: amountController,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: t.amountHint,
-              hintText: t.fixedCostAmountHint,
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: t.amountHint,
+                hintText: t.fixedCostAmountHint,
+                suffixText: t.currencySymbol(currency),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            CurrencySelector(
+              selected: currency,
+              onChanged: (c) => setState(() => currency = c),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -65,7 +79,7 @@ Future<FixedCostFormResult?> showFixedCostFormDialog(
               ));
               return;
             }
-            Navigator.pop(ctx, FixedCostFormResult(name, amount));
+            Navigator.pop(ctx, FixedCostFormResult(name, amount, currency));
           },
           child: Text(t.save),
         ),

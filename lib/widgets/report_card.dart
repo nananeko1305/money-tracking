@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../l10n/strings.dart';
 import '../models/category.dart';
+import '../models/money_currency.dart';
 import '../models/monthly_report.dart';
+import '../models/report_totals.dart';
 import '../theme.dart';
 
-/// A single saved monthly report in the reports archive: totals, spend
-/// percentage and a per-category breakdown.
+/// A single saved monthly report in the reports archive: totals and spend
+/// percentage per currency, and a per-category breakdown.
 class ReportCard extends StatelessWidget {
   final MonthlyReport report;
   const ReportCard({super.key, required this.report});
@@ -15,10 +18,6 @@ class ReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppScope.of(context).strings;
     final pal = palette(context);
-    final percent = report.totalBudget > 0
-        ? (report.totalSpent / report.totalBudget) * 100
-        : 0.0;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -40,38 +39,11 @@ class ReportCard extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
           ),
           const Divider(height: 24),
-          if (report.income > 0) ...[
-            _row(t.reportIncome, t.din(report.income), null, false),
-            const SizedBox(height: 8),
+          for (final (i, MapEntry(key: currency, value: totals))
+              in report.totals.entries.indexed) ...[
+            if (i > 0) const Divider(height: 28, thickness: 1.5),
+            ..._totals(t, pal, currency, totals),
           ],
-          if (report.saved != 0) ...[
-            _row(t.reportSaved, t.signedDin(report.saved), pal.positive, false),
-            const SizedBox(height: 8),
-          ],
-          _row(t.totalBudget, t.din(report.totalBudget), null, false),
-          const SizedBox(height: 8),
-          _row(t.totalSpent, t.din(report.totalSpent), pal.spent, false),
-          const SizedBox(height: 8),
-          _row(
-            t.remainingAtEnd,
-            t.din(report.totalRemaining),
-            report.totalRemaining >= 0 ? pal.positive : pal.danger,
-            true,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: pal.subtleFill,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              t.spentPercent(percent.toStringAsFixed(1)),
-              style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
           const SizedBox(height: 12),
           Text(
             t.byCategory,
@@ -87,6 +59,48 @@ class ReportCard extends StatelessWidget {
       ),
     );
   }
+
+  /// One currency's numbers: income, fixed costs and savings when there were
+  /// any, then budget, spent, what was left and the share spent.
+  List<Widget> _totals(
+          AppStrings t, AppPalette pal, MoneyCurrency c, ReportTotals x) =>
+      [
+        if (x.income > 0) ...[
+          _row(t.reportIncome, t.money(x.income, c), null, false),
+          const SizedBox(height: 8),
+        ],
+        if (x.fixed != 0) ...[
+          _row(t.fixedCostsRow, t.money(x.fixed, c), null, false),
+          const SizedBox(height: 8),
+        ],
+        if (x.saved != 0) ...[
+          _row(t.reportSaved, t.signedMoney(x.saved, c), pal.positive, false),
+          const SizedBox(height: 8),
+        ],
+        _row(t.totalBudget, t.money(x.budget, c), null, false),
+        const SizedBox(height: 8),
+        _row(t.totalSpent, t.money(x.spent, c), pal.spent, false),
+        const SizedBox(height: 8),
+        _row(
+          t.remainingAtEnd,
+          t.money(x.remaining, c),
+          x.remaining >= 0 ? pal.positive : pal.danger,
+          true,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: pal.subtleFill,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            t.spentPercent(x.percentSpent.toStringAsFixed(1)),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ];
 
   Widget _categoryRow(BuildContext context, Category category, AppPalette pal) {
     final t = AppScope.of(context).strings;
@@ -118,7 +132,7 @@ class ReportCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${t.amount(category.spent)} / ${t.din(category.budget)}',
+                  '${t.amount(category.spent)} / ${t.money(category.budget, category.currency)}',
                   style: TextStyle(
                       fontSize: 13, color: Theme.of(context).hintColor),
                 ),

@@ -4,6 +4,7 @@ import 'package:budget_tracker/models/app_data.dart';
 import 'package:budget_tracker/models/category.dart';
 import 'package:budget_tracker/models/loan.dart';
 import 'package:budget_tracker/models/loan_direction.dart';
+import 'package:budget_tracker/models/money_currency.dart';
 import 'package:budget_tracker/models/savings_fund.dart';
 import 'package:budget_tracker/models/transaction.dart';
 import 'package:budget_tracker/services/monthly_rollover.dart';
@@ -58,14 +59,55 @@ void main() {
     expect(ran, isTrue);
     final report = data.monthlyReports.single;
     expect(report.month, '2026-09');
-    expect(report.income, 120000);
-    expect(report.saved, 17000);
-    expect(report.totalSpent, 12000);
+    final dinars = report.totalsIn(MoneyCurrency.rsd);
+    expect(dinars.income, 120000);
+    expect(dinars.saved, 17000);
+    expect(dinars.spent, 12000);
+    expect(report.totals.keys, [MoneyCurrency.rsd]);
 
     // Categories reset; income, savings and loans carry over untouched.
     expect(data.currentCategories.single.transactions, isEmpty);
     expect(data.monthlyIncome, 120000);
     expect(data.savingsFunds.single.balance, 122000);
     expect(data.loans.single.remaining, 10000);
+  });
+
+  test('savings are archived per currency', () {
+    final data = AppData(
+      currentCategories: [
+        Category(
+          id: 'c',
+          name: 'Hrana',
+          budget: 1000,
+          color: '#FF6B6B',
+          createdAt: '2026-09-01T00:00:00.000',
+        ),
+      ],
+      monthlyReports: [],
+      lastResetDate: '2026-09-01T00:00:00.000',
+      savingsFunds: [
+        SavingsFund(
+          id: 'rsd',
+          name: 'Dinari',
+          color: '#000000',
+          createdAt: '2026-09-01T00:00:00.000',
+          entries: [_tx('d', 4000, '2026-09-05T10:00:00.000')],
+        ),
+        SavingsFund(
+          id: 'eur',
+          name: 'Devize',
+          color: '#000000',
+          createdAt: '2026-09-01T00:00:00.000',
+          currency: MoneyCurrency.eur,
+          entries: [_tx('e', 300, '2026-09-06T10:00:00.000')],
+        ),
+      ],
+    );
+
+    expect(const MonthlyRollover().apply(data, now: DateTime(2026, 10, 1)),
+        isTrue);
+    final report = data.monthlyReports.single;
+    expect(report.totalsIn(MoneyCurrency.rsd).saved, 4000);
+    expect(report.totalsIn(MoneyCurrency.eur).saved, 300);
   });
 }

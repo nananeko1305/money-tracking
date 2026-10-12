@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../models/money_currency.dart';
 import '../theme.dart';
 import 'amount_row.dart';
 
@@ -9,11 +10,13 @@ import 'amount_row.dart';
 class ChecklistTotalCard extends StatelessWidget {
   final double total;
   final double left;
+  final MoneyCurrency currency;
 
   const ChecklistTotalCard({
     super.key,
     required this.total,
     required this.left,
+    required this.currency,
   });
 
   @override
@@ -29,9 +32,9 @@ class ChecklistTotalCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          AmountRow(t.checklistTotal, t.din(total), emphasized: true),
+          AmountRow(t.checklistTotal, t.money(total, currency), emphasized: true),
           const SizedBox(height: 8),
-          AmountRow(t.remaining, t.din(left), color: pal.spent),
+          AmountRow(t.remaining, t.money(left, currency), color: pal.spent),
         ],
       ),
     );

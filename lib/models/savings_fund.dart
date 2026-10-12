@@ -1,14 +1,18 @@
+import 'money_currency.dart';
 import 'transaction.dart';
 
-/// A savings pot, such as an emergency fund or a holiday fund. Its balance is
-/// the opening balance plus every recorded entry: deposits are positive
-/// amounts, withdrawals negative. The monthly rollover never clears it.
+/// A savings pot, such as an emergency fund or a holiday fund, in dinars or
+/// euros. Its balance is the opening balance plus every recorded entry:
+/// deposits are positive amounts, withdrawals negative. The monthly rollover
+/// never clears it. Only dinar funds count against the (dinar) monthly
+/// income; there is no exchange rate.
 class SavingsFund {
   final String id;
   String name;
   double target; // 0 = no goal
   double openingBalance; // already saved before tracking began
   final String color;
+  MoneyCurrency currency;
   final String createdAt; // ISO date string
   List<Transaction> entries;
 
@@ -19,6 +23,7 @@ class SavingsFund {
     required this.createdAt,
     this.target = 0,
     this.openingBalance = 0,
+    this.currency = MoneyCurrency.rsd,
     List<Transaction>? entries,
   }) : entries = entries ?? [];
 
@@ -48,6 +53,7 @@ class SavingsFund {
         createdAt: json['createdAt'] as String,
         target: (json['target'] as num?)?.toDouble() ?? 0,
         openingBalance: (json['openingBalance'] as num?)?.toDouble() ?? 0,
+        currency: MoneyCurrency.fromName(json['currency'] as String?),
         entries: (json['entries'] as List<dynamic>?)
                 ?.map((e) => Transaction.fromJson(e as Map<String, dynamic>))
                 .toList() ??
@@ -61,6 +67,7 @@ class SavingsFund {
         'createdAt': createdAt,
         'target': target,
         'openingBalance': openingBalance,
+        'currency': currency.name,
         'entries': entries.map((e) => e.toJson()).toList(),
       };
 }

@@ -83,6 +83,8 @@ class AppDataDecoder {
       fixedCosts: _parse(fixedDocs, FixedCost.fromJson),
       lastResetDate: (monthStart(month) ?? DateTime.now()).toIso8601String(),
       monthlyIncome: (profile?['monthlyIncome'] as num?)?.toDouble() ?? 0,
+      monthlyIncomeEur:
+          (profile?['monthlyIncomeEur'] as num?)?.toDouble() ?? 0,
       savingsFunds: funds,
       loans: loans,
       checklists: checklists,

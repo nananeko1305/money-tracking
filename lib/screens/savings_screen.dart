@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
 import '../models/savings_fund.dart';
+import '../models/savings_totals.dart';
 import '../services/savings_repository.dart';
 import '../theme.dart';
 import '../widgets/amount_entry_dialog.dart';
@@ -50,15 +51,13 @@ class SavingsScreenState extends State<SavingsScreen> {
     });
   }
 
-  double get _total => _funds.fold(0.0, (s, f) => s + f.balance);
-  double get _thisMonth =>
-      _funds.fold(0.0, (s, f) => s + f.netInMonth(DateTime.now()));
-
   Future<void> _addFund() async {
     final result = await showSavingsFundFormDialog(context);
     if (result == null) return;
     await widget.storage.addFund(result.name,
-        target: result.target, openingBalance: result.openingBalance);
+        target: result.target,
+        openingBalance: result.openingBalance,
+        currency: result.currency);
     await reload();
   }
 
@@ -68,7 +67,8 @@ class SavingsScreenState extends State<SavingsScreen> {
     await widget.storage.updateFund(fund.id,
         name: result.name,
         target: result.target,
-        openingBalance: result.openingBalance);
+        openingBalance: result.openingBalance,
+        currency: result.currency);
     await reload();
   }
 
@@ -90,7 +90,9 @@ class SavingsScreenState extends State<SavingsScreen> {
   Future<void> _deposit(SavingsFund fund) async {
     final t = AppScope.of(context).strings;
     final entry = await showAmountEntryDialog(context,
-        title: t.depositTitle, confirmLabel: t.deposit);
+        title: t.depositTitle,
+        confirmLabel: t.deposit,
+        amountSuffix: t.currencySymbol(fund.currency));
     if (entry == null) return;
     await widget.storage.deposit(fund.id, entry.amount, entry.description);
     await reload();
@@ -100,7 +102,9 @@ class SavingsScreenState extends State<SavingsScreen> {
     final t = AppScope.of(context).strings;
     final messenger = ScaffoldMessenger.of(context);
     final entry = await showAmountEntryDialog(context,
-        title: t.withdrawTitle, confirmLabel: t.withdraw);
+        title: t.withdrawTitle,
+        confirmLabel: t.withdraw,
+        amountSuffix: t.currencySymbol(fund.currency));
     if (entry == null) return;
     if (entry.amount > fund.balance + 0.005) {
       messenger.showSnackBar(SnackBar(content: Text(t.insufficientSavings)));
@@ -138,7 +142,8 @@ class SavingsScreenState extends State<SavingsScreen> {
           if (_funds.isEmpty)
             EmptyState(title: t.noSavings, subtitle: t.noSavingsSub)
           else ...[
-            SavingsSummaryCard(total: _total, thisMonth: _thisMonth),
+            SavingsSummaryCard(
+                totals: SavingsTotals.of(_funds, DateTime.now())),
             const SizedBox(height: 16),
           ],
           ..._funds.map((fund) => SavingsFundCard(
