@@ -14,10 +14,12 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Fixed costs** — recurring monthly items (rent, utilities, subscriptions)
   with their amounts and the monthly total; kept across months. They come out
   of the monthly income in full every month.
-- **Savings** — funds (e.g. emergency fund, holiday) in dinars or euros, with
-  an optional opening balance and goal; record deposits and withdrawals, with
-  history per fund. Net dinar savings for the month count against the monthly
-  income; euro funds are totalled on their own (there is no exchange rate).
+- **Savings** — funds (e.g. emergency fund, holiday); one fund can hold dinars
+  and euros at once, each with its own balance and optional opening balance.
+  The optional goal is in one currency and counts only that currency's
+  balance. Deposits and withdrawals pick their currency (the goal's by
+  default), with history per fund. The month's net savings in each currency
+  count against that currency's income (there is no exchange rate).
 - **Loans** — who owes you and whom you owe, in dinars or euros, with
   repayments, what is left and the net balance per currency; settled loans are
   kept in a collapsed section.

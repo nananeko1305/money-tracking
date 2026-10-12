@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../models/money_currency.dart';
 import '../models/savings_fund.dart';
 import '../models/transaction.dart';
 import '../services/savings_repository.dart';
@@ -85,11 +86,14 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
           ),
           child: Column(
             children: [
-              AmountRow(t.savingsBalance, t.money(fund.balance, fund.currency),
-                  color: pal.positive, emphasized: true),
-              if (fund.openingBalance > 0) ...[
-                const SizedBox(height: 6),
-                AmountRow(t.openingBalance, t.money(fund.openingBalance, fund.currency)),
+              for (final (i, c) in fund.currencies.indexed)
+                AmountRow(i == 0 ? t.savingsBalance : '',
+                    t.money(fund.balanceIn(c), c),
+                    color: pal.positive, emphasized: true),
+              for (final (i, c) in _openingCurrencies(fund).indexed) ...[
+                if (i == 0) const SizedBox(height: 6),
+                AmountRow(i == 0 ? t.openingBalance : '',
+                    t.money(fund.openingIn(c), c)),
               ],
               if (fund.hasTarget) ...[
                 const SizedBox(height: 6),
@@ -107,7 +111,7 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
                 : e.amount >= 0
                     ? t.depositEntry
                     : t.withdrawalEntry,
-            amountOf: (e) => t.signedMoney(e.amount, fund.currency),
+            amountOf: (e) => t.signedMoney(e.amount, fund.currencyOf(e)),
             colorOf: (e) => e.amount >= 0 ? pal.positive : pal.spent,
             onDelete: _deleteEntry,
           ),
@@ -115,4 +119,9 @@ class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
       ],
     );
   }
+
+  List<MoneyCurrency> _openingCurrencies(SavingsFund fund) => [
+        for (final c in MoneyCurrency.values)
+          if (fund.openingIn(c) > 0) c,
+      ];
 }
