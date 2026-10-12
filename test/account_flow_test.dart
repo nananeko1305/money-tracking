@@ -40,7 +40,6 @@ void main() {
         findsOneWidget);
 
     await signIn(tester);
-    await tapText(tester, 'Ne sada'); // empty account: no backup restore
     expect(find.text('Dodaj kategoriju'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.menu));
@@ -55,6 +54,9 @@ void main() {
     await tester.ensureVisible(find.text('Odjavi se'));
     await tester.pumpAndSettle();
     expect(find.text('ana@example.com'), findsOneWidget);
+    // Data lives on the account: there is no file export / import any more.
+    expect(find.text('Izvezi podatke'), findsNothing);
+    expect(find.text('Uvezi podatke'), findsNothing);
     await tapText(tester, 'Odjavi se'); // drawer item
     await tapText(tester, 'Odjavi se'); // confirm
     expect(find.text('Prijavi se nalogom koji ti je napravio admin.'),
@@ -124,8 +126,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tapText(tester, 'Ne sada'); // the move
-    await tapText(tester, 'Ne sada'); // then the backup-file restore
+    await tapText(tester, 'Ne sada');
+    expect(find.text('Dodaj kategoriju'), findsOneWidget);
     expect(await legacyOnPhone(tester), legacyBlob);
     expect(await tester.runAsync(() => LegacyLocalData().pending()), isNotNull);
   });
@@ -151,5 +153,8 @@ void main() {
     expect(await legacy.pending(), isNotNull);
     await legacy.markMoved('ana');
     expect(await legacy.pending(), isNull);
+
+    SharedPreferences.setMockInitialValues({'budget_app_data': '{not json'});
+    expect(await LegacyLocalData().pending(), isNull);
   });
 }

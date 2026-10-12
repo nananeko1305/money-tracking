@@ -28,8 +28,6 @@ void main() {
       firestore: FakeFirebaseFirestore(),
     ));
     await tester.pumpAndSettle();
-    // An empty account first offers to restore a backup; decline it.
-    await tapText(tester, 'Ne sada');
   }
 
   testWidgets('setting the monthly income shows the breakdown',
