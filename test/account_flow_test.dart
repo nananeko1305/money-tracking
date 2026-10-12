@@ -4,11 +4,13 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mock_exceptions/mock_exceptions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:budget_tracker/app.dart';
+import 'package:budget_tracker/theme.dart';
 import 'package:budget_tracker/services/legacy_local_data.dart';
 
 /// Sign-in, sign-out and moving the on-phone data to the account, through
@@ -57,6 +59,12 @@ void main() {
     // Data lives on the account: there is no file export / import any more.
     expect(find.text('Izvezi podatke'), findsNothing);
     expect(find.text('Uvezi podatke'), findsNothing);
+    // Signing out is red, text and icon.
+    final danger = palette(tester.element(find.text('Odjavi se'))).danger;
+    expect(tester.renderObject<RenderParagraph>(find.text('Odjavi se'))
+        .text.style?.color, danger);
+    expect(
+        IconTheme.of(tester.element(find.byIcon(Icons.logout))).color, danger);
     await tapText(tester, 'Odjavi se'); // drawer item
     await tapText(tester, 'Odjavi se'); // confirm
     expect(find.text('Prijavi se nalogom koji ti je napravio admin.'),
