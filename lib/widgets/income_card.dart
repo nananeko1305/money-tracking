@@ -6,8 +6,8 @@ import '../theme.dart';
 import 'amount_row.dart';
 
 /// The dashboard card for the month's income (salary): how much of it is
-/// allocated to categories or moved to savings, and how much is left after
-/// spending, one block per currency with an income. With no income set it
+/// allocated to categories, paid in fixed costs or moved to savings, and how
+/// much is left after spending, one block per currency with an income. With no income set it
 /// invites the user to enter one.
 class IncomeCard extends StatelessWidget {
   final List<IncomeTotals> totals;
@@ -102,6 +102,10 @@ class IncomeCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         AmountRow(t.allocated, t.money(x.allocated, x.currency)),
+        if (x.fixed != 0) ...[
+          const SizedBox(height: 6),
+          AmountRow(t.fixedCostsRow, t.money(x.fixed, x.currency)),
+        ],
         if (x.saved != 0) ...[
           const SizedBox(height: 6),
           AmountRow(t.savingsThisMonth, t.signedMoney(x.saved, x.currency)),

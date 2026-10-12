@@ -10,8 +10,8 @@ import '../models/report_totals.dart';
 /// [AppData.lastResetDate], the previous month is archived as a
 /// [MonthlyReport] and the live categories keep their structure but lose their
 /// recorded transactions. Income, savings and loans carry over untouched; the
-/// report only snapshots, per currency, the income and what was saved that
-/// month. Pure logic — it never touches persistence.
+/// report only snapshots, per currency, the income, the fixed costs and what
+/// was saved that month. Pure logic — it never touches persistence.
 class MonthlyRollover {
   const MonthlyRollover();
 
@@ -30,6 +30,8 @@ class MonthlyRollover {
     final budgets = BudgetTotals.of(data.currentCategories);
     final saved = sumByCurrency(data.savingsFunds, (f) => f.currency,
         (f) => f.netInMonth(lastReset));
+    final fixed =
+        sumByCurrency(data.fixedCosts, (c) => c.currency, (c) => c.amount);
     BudgetTotals? budgetIn(MoneyCurrency c) =>
         budgets.where((b) => b.currency == c).firstOrNull;
 
@@ -44,11 +46,13 @@ class MonthlyRollover {
         for (final c in MoneyCurrency.values)
           if (budgetIn(c) != null ||
               data.incomeIn(c) > 0 ||
+              (fixed[c] ?? 0) != 0 ||
               (saved[c] ?? 0) != 0)
             c: ReportTotals(
               budget: budgetIn(c)?.budget ?? 0,
               spent: budgetIn(c)?.spent ?? 0,
               income: data.incomeIn(c),
+              fixed: fixed[c] ?? 0,
               saved: saved[c] ?? 0,
             ),
       },

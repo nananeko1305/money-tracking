@@ -53,13 +53,25 @@ void main() {
     await tapText(tester, 'Sačuvaj');
     expect(find.text('120.000 din'), findsNWidgets(3));
 
+    // Fixed costs come out of the income too.
+    await tester.tap(find.byIcon(Icons.receipt_long));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Dodaj fiksni trošak');
+    await tester.enterText(find.byType(TextField).at(0), 'Kirija');
+    await tester.enterText(find.byType(TextField).at(1), '30000');
+    await tapText(tester, 'Sačuvaj');
+    await tester.tap(find.byIcon(Icons.account_balance_wallet));
+    await tester.pumpAndSettle();
+    expect(find.text('Fiksni troškovi:'), findsOneWidget);
+    expect(find.text('90.000 din'), findsNWidgets(2)); // unallocated, left
+
     // A category budget is allocated out of the income.
     await tapText(tester, 'Dodaj kategoriju');
     final fields = find.byType(TextField);
     await tester.enterText(fields.at(fields.evaluate().length - 2), 'Hrana');
     await tester.enterText(fields.last, '40000');
     await tapText(tester, 'Sačuvaj');
-    expect(find.text('80.000 din'), findsOneWidget); // unallocated
+    expect(find.text('50.000 din'), findsOneWidget); // unallocated
   });
 
   testWidgets('the dashboard keeps dinars and euros apart', (tester) async {

@@ -102,6 +102,7 @@ void main() {
     expect(reports.first.categories.first.spent, 38000);
     expect(reports.first.categories.first.currency, MoneyCurrency.rsd);
     expect(dinars.income, 0);
+    expect(dinars.fixed, 0);
     expect(dinars.saved, 0);
 
     // Backups from before income, savings and loans existed start without them.

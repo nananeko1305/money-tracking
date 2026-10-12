@@ -191,7 +191,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           : IndexedStack(
               index: _index,
               children: [
-                DashboardScreen(storage: _storage, savings: _savings),
+                DashboardScreen(
+                    storage: _storage,
+                    savings: _savings,
+                    fixedCosts: _fixedCosts),
                 FixedCostsScreen(storage: _fixedCosts),
                 SavingsScreen(storage: _savings),
                 LoansScreen(storage: _loans),

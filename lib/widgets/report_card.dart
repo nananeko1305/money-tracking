@@ -60,13 +60,17 @@ class ReportCard extends StatelessWidget {
     );
   }
 
-  /// One currency's numbers: income and savings when there were any, then
-  /// budget, spent, what was left and the share spent.
+  /// One currency's numbers: income, fixed costs and savings when there were
+  /// any, then budget, spent, what was left and the share spent.
   List<Widget> _totals(
           AppStrings t, AppPalette pal, MoneyCurrency c, ReportTotals x) =>
       [
         if (x.income > 0) ...[
           _row(t.reportIncome, t.money(x.income, c), null, false),
+          const SizedBox(height: 8),
+        ],
+        if (x.fixed != 0) ...[
+          _row(t.fixedCostsRow, t.money(x.fixed, c), null, false),
           const SizedBox(height: 8),
         ],
         if (x.saved != 0) ...[

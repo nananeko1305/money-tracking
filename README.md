@@ -8,10 +8,12 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Budget** — categories with budget and spending, progress bars, totals and
   days until reset (in dinars).
 - **Monthly income** — enter your salary (or total monthly budget) to see how
-  much is allocated to categories or moved to savings, what is unallocated and
-  what is left after spending. It carries over to the next month.
+  much is allocated to categories, paid in fixed costs or moved to savings,
+  what is unallocated and what is left after spending. It carries over to the
+  next month.
 - **Fixed costs** — recurring monthly items (rent, utilities, subscriptions)
-  with their amounts and the monthly total; kept across months.
+  with their amounts and the monthly total; kept across months. They come out
+  of the monthly income in full every month.
 - **Savings** — funds (e.g. emergency fund, holiday) in dinars or euros, with
   an optional opening balance and goal; record deposits and withdrawals, with
   history per fund. Net dinar savings for the month count against the monthly

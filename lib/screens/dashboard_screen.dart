@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../models/budget_totals.dart';
 import '../models/category.dart';
+import '../models/currency_sums.dart';
 import '../models/income_totals.dart';
 import '../models/money_currency.dart';
 import '../services/budget_repository.dart';
+import '../services/fixed_cost_repository.dart';
 import '../services/savings_repository.dart';
 import '../theme.dart';
 import '../widgets/category_card.dart';
@@ -20,11 +22,13 @@ import 'category_detail_screen.dart';
 class DashboardScreen extends StatefulWidget {
   final BudgetRepository storage;
   final SavingsRepository savings;
+  final FixedCostRepository fixedCosts;
 
   const DashboardScreen({
     super.key,
     required this.storage,
     required this.savings,
+    required this.fixedCosts,
   });
 
   @override
@@ -35,14 +39,15 @@ class DashboardScreenState extends State<DashboardScreen> {
   List<Category> _categories = [];
   Map<MoneyCurrency, double> _incomes = const {};
   Map<MoneyCurrency, double> _savedThisMonth = const {};
+  Map<MoneyCurrency, double> _fixed = const {};
   int _daysRemaining = 0;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    // Follows every change, including the ones made on another phone. Both
-    // repositories sit on the same live data, so one listener covers them.
+    // Follows every change, including the ones made on another phone. All
+    // the repositories sit on the same live data, so one listener covers them.
     widget.storage.changes.addListener(reload);
     reload();
   }
@@ -57,11 +62,13 @@ class DashboardScreenState extends State<DashboardScreen> {
     final cats = await widget.storage.currentCategories();
     final incomes = await widget.storage.monthlyIncomes();
     final saved = await widget.savings.netSavedInMonth(DateTime.now());
+    final fixed = await widget.fixedCosts.fixedCosts();
     if (!mounted) return;
     setState(() {
       _categories = cats;
       _incomes = incomes;
       _savedThisMonth = saved;
+      _fixed = sumByCurrency(fixed, (c) => c.currency, (c) => c.amount);
       _daysRemaining = widget.storage.daysUntilReset();
       _loading = false;
     });
@@ -148,6 +155,7 @@ class DashboardScreenState extends State<DashboardScreen> {
             totals: IncomeTotals.of(
               incomeIn: (c) => _incomes[c] ?? 0,
               budgets: budgets,
+              fixed: _fixed,
               saved: _savedThisMonth,
             ),
             onEdit: _editIncome,

@@ -23,13 +23,17 @@ class FixedCostsTotalCard extends StatelessWidget {
         border: Border.all(color: pal.cardBorder),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            t.fixedCostsTotal,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          // The label gives way, so a long amount never overflows the card.
+          Expanded(
+            child: Text(
+              t.fixedCostsTotal,
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
           ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

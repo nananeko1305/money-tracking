@@ -34,6 +34,8 @@ class MonthlyReport {
       budget: (json['totalBudget'] as num?)?.toDouble() ?? 0,
       spent: (json['totalSpent'] as num?)?.toDouble() ?? 0,
       income: (json['income'] as num?)?.toDouble() ?? 0,
+      // Absent in reports made before fixed costs counted against income.
+      fixed: (json['fixedCosts'] as num?)?.toDouble() ?? 0,
       saved: (json['saved'] as num?)?.toDouble() ?? 0,
     );
     final euros = json['eur'] as Map<String, dynamic>?;
@@ -61,6 +63,7 @@ class MonthlyReport {
       'totalSpent': dinars.spent,
       'totalRemaining': dinars.remaining,
       'income': dinars.income,
+      'fixedCosts': dinars.fixed,
       'saved': dinars.saved,
       if (totals[MoneyCurrency.eur] case final euros?) 'eur': euros.toJson(),
       'savedAt': savedAt,

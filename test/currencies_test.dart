@@ -43,10 +43,14 @@ void main() {
         1620);
   });
 
-  test('each income only carries its own currency', () async {
+  test('each income only carries its own currency, fixed costs included',
+      () async {
     final session = await openFakeSession();
     final budget = BudgetRepository(session);
     final savings = SavingsRepository(session);
+    final fixedCosts = FixedCostRepository(session);
+    await fixedCosts.addFixedCost('Kirija', 30000);
+    await fixedCosts.addFixedCost('Netflix', 13, currency: MoneyCurrency.eur);
     await budget.setMonthlyIncome(rsd: 120000, eur: 1000);
     await budget.addCategory('Hrana', 40000);
     final trip = await budget.addCategory('Putovanje', 500,
@@ -60,13 +64,16 @@ void main() {
     final totals = IncomeTotals.of(
       incomeIn: (c) => incomes[c] ?? 0,
       budgets: BudgetTotals.of(await budget.currentCategories()),
+      fixed: sumByCurrency(
+          await fixedCosts.fixedCosts(), (c) => c.currency, (c) => c.amount),
       saved: await savings.netSavedInMonth(DateTime.now()),
     );
     expect(totals.map((t) => t.currency),
         [MoneyCurrency.rsd, MoneyCurrency.eur]);
-    expect(totals[0].unallocated, 80000); // dinars: no savings this month
-    expect(totals[1].unallocated, 400); // 1000 − 500 budget − 100 saved
-    expect(totals[1].left, 780); // 1000 − 120 spent − 100 saved
+    expect(totals[0].unallocated, 50000); // 120000 − 40000 − 30000 fixed
+    expect(totals[0].left, 90000); // nothing spent, 30000 fixed
+    expect(totals[1].unallocated, 387); // 1000 − 500 − 13 fixed − 100 saved
+    expect(totals[1].left, 767); // 1000 − 120 spent − 13 fixed − 100 saved
   });
 
   test('closing the month reports each currency on its own', () async {
@@ -75,6 +82,8 @@ void main() {
     final session = await openFakeSession(clock: () => now);
     final budget = BudgetRepository(session);
     await budget.setMonthlyIncome(rsd: 0, eur: 1000);
+    await FixedCostRepository(session)
+        .addFixedCost('Kirija', 300, currency: MoneyCurrency.eur);
     final food = await budget.addCategory('Hrana', 40000);
     final trip = await budget.addCategory('Putovanje', 500,
         currency: MoneyCurrency.eur);
@@ -92,6 +101,8 @@ void main() {
     expect(report.totalsIn(MoneyCurrency.rsd).income, 0);
     expect(report.totalsIn(MoneyCurrency.eur).spent, 120);
     expect(report.totalsIn(MoneyCurrency.eur).income, 1000);
+    expect(report.totalsIn(MoneyCurrency.eur).fixed, 300);
+    expect(report.totalsIn(MoneyCurrency.rsd).fixed, 0);
     expect(report.categories.last.currency, MoneyCurrency.eur);
   });
 
