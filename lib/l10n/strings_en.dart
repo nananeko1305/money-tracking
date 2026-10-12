@@ -85,12 +85,6 @@ class StringsEn extends AppStrings
   @override
   String get byCategory => 'By category:';
   @override
-  String get dataSection => 'Data';
-  @override
-  String get exportData => 'Export data';
-  @override
-  String get importData => 'Import data';
-  @override
   String get settingsSection => 'Settings';
   @override
   String get language => 'Language';
@@ -103,37 +97,7 @@ class StringsEn extends AppStrings
   @override
   String get themeDark => 'Dark';
   @override
-  String get importConfirmTitle => 'Import data';
-  @override
-  String get importConfirmMsg =>
-      'Importing will replace all data in your account, on every phone, with the backup. Do you want to continue?';
-  @override
-  String get import => 'Import';
-  @override
-  String get importSuccess => 'Data imported successfully';
-  @override
-  String get importInvalid => 'Invalid backup file';
-  @override
-  String get shareUnavailable => 'Sharing is not available on this device';
-  @override
-  String get exportSaved => 'Saved to Download/MoneyTracking';
-  @override
-  String get exportFailed => 'Save failed';
-  @override
-  String get storagePermissionDenied => 'File access was denied';
-  @override
-  String get restorePromptTitle => 'Restore data';
-  @override
-  String get restorePromptMsg =>
-      'If you have a saved backup on your phone, I can find and import it. Check now?';
-  @override
-  String get check => 'Check';
-  @override
   String get notNow => 'Not now';
-  @override
-  String get restoreFoundTitle => 'Backup found';
-  @override
-  String get noBackupsFound => 'No saved backups found';
   @override
   String get updateAvailableTitle => 'Update available';
   @override
@@ -156,10 +120,10 @@ class StringsEn extends AppStrings
   String get onbExpensesBody =>
       'Add expenses to a category. The app tracks spent and remaining with a clear progress bar.';
   @override
-  String get onbReportsTitle => 'Reports & backup';
+  String get onbReportsTitle => 'Reports';
   @override
   String get onbReportsBody =>
-      'On the 1st of each month your budget is archived as a report. Export your data to the phone and restore it whenever you need.';
+      'On the 1st of each month your budget is archived as a report, so you can always look back at past months.';
   @override
   String get onbMoneyTitle => 'Income, savings and loans';
   @override
@@ -194,10 +158,6 @@ class StringsEn extends AppStrings
   @override
   String updateAvailableMsg(String version) =>
       'A new version ($version) is available. Download it now?';
-
-  @override
-  String restoreFoundMsg(String isoDate) =>
-      'Found a backup from ${date(isoDate)}. Do you want to import it?';
 
   @override
   String savedOn(String isoDate) => 'Saved: ${date(isoDate)}';

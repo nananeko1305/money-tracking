@@ -1,5 +1,9 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'dart:convert';
 
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:budget_tracker/services/legacy_local_data.dart';
 import 'package:budget_tracker/services/user_session.dart';
 
 const String testUid = 'test-user';
@@ -35,4 +39,15 @@ Future<void> settle() async {
   for (var i = 0; i < 20; i++) {
     await Future<void>.delayed(Duration.zero);
   }
+}
+
+/// Moves [blob], as the app kept it on the phone before accounts existed,
+/// into [session]'s account: what agreeing to the move on first start does.
+Future<void> moveLocalData(
+    UserSession session, Map<String, dynamic> blob) async {
+  SharedPreferences.setMockInitialValues(
+      {'budget_app_data': jsonEncode(blob)});
+  final data = await LegacyLocalData().pending();
+  session.replacer.replaceWith(data!);
+  await settle();
 }

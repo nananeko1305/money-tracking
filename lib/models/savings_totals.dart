@@ -1,8 +1,9 @@
 import 'money_currency.dart';
 import 'savings_fund.dart';
 
-/// The savings in one currency: the balance across its funds and the net
-/// amount moved into them during a month.
+/// The savings in one currency: the balance across all funds and the net
+/// amount moved into them during a month. A fund that holds dinars and euros
+/// counts in both.
 class SavingsTotals {
   const SavingsTotals({
     required this.currency,
@@ -14,19 +15,19 @@ class SavingsTotals {
   final double balance;
   final double thisMonth;
 
-  /// One entry per currency that at least one of [funds] uses, dinars first;
-  /// [thisMonth] covers the calendar month of [month].
+  /// One entry per currency that at least one of [funds] holds, dinars
+  /// first; [thisMonth] covers the calendar month of [month].
   static List<SavingsTotals> of(Iterable<SavingsFund> funds, DateTime month) {
-    Iterable<SavingsFund> inCurrency(MoneyCurrency c) =>
-        funds.where((f) => f.currency == c);
+    Iterable<SavingsFund> holding(MoneyCurrency c) =>
+        funds.where((f) => f.currencies.contains(c));
     return [
       for (final c in MoneyCurrency.values)
-        if (inCurrency(c).isNotEmpty)
+        if (holding(c).isNotEmpty)
           SavingsTotals(
             currency: c,
-            balance: inCurrency(c).fold(0.0, (s, f) => s + f.balance),
+            balance: holding(c).fold(0.0, (s, f) => s + f.balanceIn(c)),
             thisMonth:
-                inCurrency(c).fold(0.0, (s, f) => s + f.netInMonth(month)),
+                holding(c).fold(0.0, (s, f) => s + f.netInMonth(month, c)),
           ),
     ];
   }

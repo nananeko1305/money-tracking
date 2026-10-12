@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart' show Listenable;
 
-import '../models/currency_sums.dart';
 import '../models/money_currency.dart';
 import '../models/savings_fund.dart';
+import '../models/savings_totals.dart';
 import '../models/transaction.dart';
 import 'app_data_encoder.dart';
 import 'batch_commits.dart';
@@ -35,19 +35,24 @@ class SavingsRepository {
   /// Notifies whenever the account's data changes, on this phone or another.
   Listenable get changes => _session.live;
 
+  SavingsFund? _fundById(String id) =>
+      _session.live.data?.savingsFunds.where((f) => f.id == id).firstOrNull;
+
   Future<List<SavingsFund>> funds() async =>
       (await _session.live.ready()).savingsFunds;
 
   /// Net amount moved into the funds during the calendar month of [month],
-  /// per currency: what comes out of that currency's monthly income.
-  Future<Map<MoneyCurrency, double>> netSavedInMonth(DateTime month) async =>
-      sumByCurrency(
-          await funds(), (f) => f.currency, (f) => f.netInMonth(month));
+  /// per currency (of each deposit or withdrawal): what comes out of that
+  /// currency's monthly income.
+  Future<Map<MoneyCurrency, double>> netSavedInMonth(DateTime month) async => {
+        for (final t in SavingsTotals.of(await funds(), month))
+          t.currency: t.thisMonth,
+      };
 
   Future<SavingsFund> addFund(
     String name, {
     double target = 0,
-    double openingBalance = 0,
+    Map<MoneyCurrency, double> openingBalances = const {},
     MoneyCurrency currency = MoneyCurrency.rsd,
   }) async {
     final fund = SavingsFund(
@@ -56,7 +61,7 @@ class SavingsRepository {
       color: _palette.randomColor(),
       createdAt: DateTime.now().toIso8601String(),
       target: target,
-      openingBalance: openingBalance,
+      openingBalances: {...openingBalances},
       currency: currency,
     );
     _write(_docs.savingsFunds.doc(fund.id).set(_encoder.savingsFund(fund)));
@@ -67,14 +72,18 @@ class SavingsRepository {
     String id, {
     String? name,
     double? target,
-    double? openingBalance,
+    Map<MoneyCurrency, double>? openingBalances,
     MoneyCurrency? currency,
   }) async {
+    final current = _fundById(id);
+    final balances = openingBalances ?? current?.openingBalances ?? const {};
+    final main = currency ?? current?.currency ?? MoneyCurrency.rsd;
     _write(_docs.savingsFunds.doc(id).update({
       'name': ?name,
       'target': ?target,
-      'openingBalance': ?openingBalance,
       if (currency != null) 'currency': currency.name,
+      if (openingBalances != null || currency != null)
+        ...SavingsFund.openingFields(balances, main),
     }));
   }
 
@@ -89,23 +98,27 @@ class SavingsRepository {
     ]);
   }
 
-  Future<void> deposit(String fundId, double amount, String description) =>
-      _addEntry(fundId, amount, description);
+  /// [currency] defaults to the fund's own.
+  Future<void> deposit(String fundId, double amount, String description,
+          {MoneyCurrency? currency}) =>
+      _addEntry(fundId, amount, description, currency);
 
-  Future<void> withdraw(String fundId, double amount, String description) =>
-      _addEntry(fundId, -amount, description);
+  Future<void> withdraw(String fundId, double amount, String description,
+          {MoneyCurrency? currency}) =>
+      _addEntry(fundId, -amount, description, currency);
 
   Future<void> deleteEntry(String fundId, String entryId) async =>
       _write(_docs.savingsEntries.doc(entryId).delete());
 
   /// Records a signed entry: positive for a deposit, negative for a withdrawal.
-  Future<void> _addEntry(
-      String fundId, double signedAmount, String description) async {
+  Future<void> _addEntry(String fundId, double signedAmount,
+      String description, MoneyCurrency? currency) async {
     final entry = Transaction(
       id: _ids.next(),
       amount: signedAmount,
       description: description.trim(),
       date: DateTime.now().toIso8601String(),
+      currency: currency ?? _fundById(fundId)?.currency,
     );
     _write(_docs.savingsEntries
         .doc(entry.id)

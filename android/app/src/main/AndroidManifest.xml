@@ -1,14 +1,4 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Backups live in a shared public folder (Download/MoneyTracking) so they
-         survive app reinstalls. Reading/writing there needs All-files access on
-         Android 11+, and the legacy storage permissions on older versions. -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29" />
     <!-- Android 13+: needed to show release notifications. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application

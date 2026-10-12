@@ -65,15 +65,15 @@ class AppData {
                 ?.map((e) => MonthlyReport.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
-        // Absent in stores and backups made before fixed costs existed.
+        // Absent in on-phone data saved before fixed costs existed.
         fixedCosts: (json['fixedCosts'] as List<dynamic>?)
                 ?.map((e) => FixedCost.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
         lastResetDate: (json['lastResetDate'] as String?) ??
             DateTime.now().toIso8601String(),
-        // Income, savings and loans are absent in stores and backups made
-        // before they existed.
+        // Income, savings and loans are absent in on-phone data saved before
+        // they existed.
         monthlyIncome: (json['monthlyIncome'] as num?)?.toDouble() ?? 0,
         monthlyIncomeEur:
             (json['monthlyIncomeEur'] as num?)?.toDouble() ?? 0,
@@ -85,7 +85,7 @@ class AppData {
                 ?.map((e) => Loan.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
-        // Absent in backups made before checklists existed.
+        // Absent in on-phone data: lists came after accounts.
         checklists: (json['checklists'] as List<dynamic>?)
                 ?.map((e) => Checklist.fromJson(e as Map<String, dynamic>))
                 .toList() ??

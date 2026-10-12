@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart' show SetOptions;
 import 'package:flutter/foundation.dart' show Listenable;
 
@@ -17,7 +15,7 @@ import 'user_collections.dart';
 import 'user_session.dart';
 
 /// Application-facing budget operations on the signed-in account: the monthly
-/// income, categories and their expenses, reports, and backup import / export.
+/// income, categories and their expenses, and reports.
 /// Reads come from the live view; every change goes straight to its own
 /// document and is not awaited (see [WriteErrors]). Closing the month is the
 /// [MonthCloser]'s job.
@@ -130,23 +128,4 @@ class BudgetRepository {
 
   /// Days remaining until the first of next month.
   int daysUntilReset() => _rollover.daysUntilReset();
-
-  /// Serialises the account's data for backup, in the same format the app
-  /// has always exported.
-  Future<String> exportJson() async =>
-      const JsonEncoder.withIndent('  ').convert((await _data()).toJson());
-
-  /// Replaces the account's data with a backup. Returns false when [raw] is
-  /// not a valid backup.
-  Future<bool> importJson(String raw) async {
-    final AppData data;
-    try {
-      data = AppData.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } catch (_) {
-      return false;
-    }
-    await _data();
-    _session.replacer.replaceWith(data);
-    return true;
-  }
 }

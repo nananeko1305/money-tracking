@@ -68,31 +68,13 @@ abstract class AppStrings
   String get remainingAtEnd;
   String get byCategory;
   // Drawer / settings
-  String get dataSection;
-  String get exportData;
-  String get importData;
   String get settingsSection;
   String get language;
   String get theme;
   String get themeSystem;
   String get themeLight;
   String get themeDark;
-  String get importConfirmTitle;
-  String get importConfirmMsg;
-  String get import;
-  String get importSuccess;
-  String get importInvalid;
-  String get shareUnavailable;
-  // Backup save / restore
-  String get exportSaved;
-  String get exportFailed;
-  String get storagePermissionDenied;
-  String get restorePromptTitle;
-  String get restorePromptMsg;
-  String get check;
   String get notNow;
-  String get restoreFoundTitle;
-  String get noBackupsFound;
   // Update check
   String get updateAvailableTitle;
   String get download;
@@ -122,7 +104,6 @@ abstract class AppStrings
   String daysUntilReset(int n);
   String deleteCategoryMsg(String categoryName);
   String updateAvailableMsg(String version);
-  String restoreFoundMsg(String isoDate);
   String savedOn(String isoDate);
   String spentPercent(String percent);
 

@@ -84,12 +84,6 @@ class StringsSr extends AppStrings
   @override
   String get byCategory => 'Po kategorijama:';
   @override
-  String get dataSection => 'Podaci';
-  @override
-  String get exportData => 'Izvezi podatke';
-  @override
-  String get importData => 'Uvezi podatke';
-  @override
   String get settingsSection => 'Podešavanja';
   @override
   String get language => 'Jezik';
@@ -102,37 +96,7 @@ class StringsSr extends AppStrings
   @override
   String get themeDark => 'Tamna';
   @override
-  String get importConfirmTitle => 'Uvezi podatke';
-  @override
-  String get importConfirmMsg =>
-      'Uvoz će zameniti sve podatke na tvom nalogu, na svim telefonima, sačuvanim backup-om. Da li želiš da nastaviš?';
-  @override
-  String get import => 'Uvezi';
-  @override
-  String get importSuccess => 'Podaci su uspešno uvezeni';
-  @override
-  String get importInvalid => 'Neispravan backup fajl';
-  @override
-  String get shareUnavailable => 'Deljenje nije dostupno na ovom uređaju';
-  @override
-  String get exportSaved => 'Sačuvano u fasciklu Download/MoneyTracking';
-  @override
-  String get exportFailed => 'Čuvanje nije uspelo';
-  @override
-  String get storagePermissionDenied => 'Pristup fajlovima je odbijen';
-  @override
-  String get restorePromptTitle => 'Vrati podatke';
-  @override
-  String get restorePromptMsg =>
-      'Ako imaš sačuvan backup na telefonu, mogu da ga pronađem i uvezem. Da proverim?';
-  @override
-  String get check => 'Proveri';
-  @override
   String get notNow => 'Ne sada';
-  @override
-  String get restoreFoundTitle => 'Pronađen backup';
-  @override
-  String get noBackupsFound => 'Nema sačuvanih backup-ova';
   @override
   String get updateAvailableTitle => 'Nova verzija';
   @override
@@ -155,10 +119,10 @@ class StringsSr extends AppStrings
   String get onbExpensesBody =>
       'Upisujte troškove u kategoriju. Aplikacija prati potrošeno i preostalo, uz jasnu traku napretka.';
   @override
-  String get onbReportsTitle => 'Izveštaji i backup';
+  String get onbReportsTitle => 'Izveštaji';
   @override
   String get onbReportsBody =>
-      'Svakog 1. u mesecu budžet se arhivira kao izveštaj. Izvezite podatke na telefon i vratite ih kad god zatreba.';
+      'Svakog 1. u mesecu budžet se arhivira kao izveštaj, pa uvek možete da pogledate kako su prošli prethodni meseci.';
   @override
   String get onbMoneyTitle => 'Prihod, štednja i pozajmice';
   @override
@@ -193,10 +157,6 @@ class StringsSr extends AppStrings
   @override
   String updateAvailableMsg(String version) =>
       'Dostupna je nova verzija ($version). Preuzmi je sada?';
-
-  @override
-  String restoreFoundMsg(String isoDate) =>
-      'Pronađen je backup od ${date(isoDate)}. Želiš li da ga uvezeš?';
 
   @override
   String savedOn(String isoDate) => 'Sačuvano: ${date(isoDate)}';
