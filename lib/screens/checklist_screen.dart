@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../models/checklist.dart';
 import '../models/checklist_item.dart';
+import '../models/money_currency.dart';
 import '../services/checklist_repository.dart';
 import '../theme.dart';
 import '../widgets/checklist_item_dialog.dart';
@@ -55,14 +56,16 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   }
 
   Future<void> _addItem() async {
-    final result = await showChecklistItemDialog(context);
+    final result = await showChecklistItemDialog(context,
+        currency: _list?.currency ?? MoneyCurrency.rsd);
     if (result == null) return;
     await widget.storage
         .addItem(widget.checklistId, result.name, result.amount);
   }
 
   Future<void> _editItem(ChecklistItem item) async {
-    final result = await showChecklistItemDialog(context, existing: item);
+    final result = await showChecklistItemDialog(context,
+        currency: _list?.currency ?? MoneyCurrency.rsd, existing: item);
     if (result == null) return;
     await widget.storage
         .updateItem(item.id, name: result.name, amount: result.amount);
@@ -108,12 +111,14 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        ChecklistTotalCard(total: list.total, left: list.left),
+        ChecklistTotalCard(
+            total: list.total, left: list.left, currency: list.currency),
         const SizedBox(height: 16),
         if (list.items.isEmpty)
           EmptyState(title: t.noItems, subtitle: t.noItemsSub),
         ...list.items.map((item) => ChecklistItemTile(
               item: item,
+              currency: list.currency,
               onToggle: (done) => _toggle(item, done),
               onEdit: () => _editItem(item),
               onDelete: () => _deleteItem(item),

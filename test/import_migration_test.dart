@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:budget_tracker/models/money_currency.dart';
 import 'package:budget_tracker/services/budget_repository.dart';
 import 'package:budget_tracker/services/loan_repository.dart';
 import 'package:budget_tracker/services/savings_repository.dart';
@@ -94,13 +95,19 @@ void main() {
 
     final reports = await storage.monthlyReports();
     expect(reports.length, 1);
-    expect(reports.first.totalSpent, 38000);
+    // An old report has no currencies: it reads as dinars.
+    final dinars = reports.first.totalsIn(MoneyCurrency.rsd);
+    expect(reports.first.totals.keys, [MoneyCurrency.rsd]);
+    expect(dinars.spent, 38000);
     expect(reports.first.categories.first.spent, 38000);
-    expect(reports.first.income, 0);
-    expect(reports.first.saved, 0);
+    expect(reports.first.categories.first.currency, MoneyCurrency.rsd);
+    expect(dinars.income, 0);
+    expect(dinars.fixed, 0);
+    expect(dinars.saved, 0);
 
     // Backups from before income, savings and loans existed start without them.
-    expect(await storage.monthlyIncome(), 0);
+    expect(await storage.monthlyIncomes(),
+        {MoneyCurrency.rsd: 0, MoneyCurrency.eur: 0});
     expect(await SavingsRepository(session).funds(), isEmpty);
     expect(await LoanRepository(session).loans(), isEmpty);
     expect(await storage.isEmpty(), isFalse);

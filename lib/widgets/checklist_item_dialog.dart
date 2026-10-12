@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../l10n/amount_input.dart';
 import '../models/checklist_item.dart';
+import '../models/money_currency.dart';
 
 /// The values entered in the checklist item add / edit form.
 class ChecklistItemFormResult {
@@ -12,10 +13,12 @@ class ChecklistItemFormResult {
 }
 
 /// Shows the add / edit item dialog. The amount is optional: some things go
-/// on a list before their price is known. Returns null if dismissed. Pass
-/// [existing] to prefill the fields for editing.
+/// on a list before their price is known. The amount is in the list's
+/// [currency]. Returns null if dismissed. Pass [existing] to prefill the
+/// fields for editing.
 Future<ChecklistItemFormResult?> showChecklistItemDialog(
   BuildContext context, {
+  required MoneyCurrency currency,
   ChecklistItem? existing,
 }) {
   final t = AppScope.of(context).strings;
@@ -48,7 +51,7 @@ Future<ChecklistItemFormResult?> showChecklistItemDialog(
                 const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: t.itemAmountLabel,
-              suffixText: t.currency,
+              suffixText: t.currencySymbol(currency),
             ),
           ),
         ],

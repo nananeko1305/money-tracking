@@ -107,7 +107,11 @@ void main() {
     final data = _sample();
     final docs = encoder.encode(data);
 
-    expect(docs.profile, {'currentMonth': '2026-10', 'monthlyIncome': 120000});
+    expect(docs.profile, {
+      'currentMonth': '2026-10',
+      'monthlyIncome': 120000,
+      'monthlyIncomeEur': 0,
+    });
     expect(docs[UserCollections.expensesName].map((d) => d['month']),
         everyElement('2026-10'));
     expect(docs[UserCollections.categoriesName].first.containsKey('spent'),

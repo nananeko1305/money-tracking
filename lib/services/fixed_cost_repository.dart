@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show Listenable;
 
 import '../models/fixed_cost.dart';
+import '../models/money_currency.dart';
 import 'app_data_encoder.dart';
 import 'id_generator.dart';
 import 'user_collections.dart';
@@ -30,8 +31,13 @@ class FixedCostRepository {
   Future<List<FixedCost>> fixedCosts() async =>
       (await _session.live.ready()).fixedCosts;
 
-  Future<FixedCost> addFixedCost(String name, double amount) async {
-    final cost = FixedCost(id: _ids.next(), name: name, amount: amount);
+  Future<FixedCost> addFixedCost(
+    String name,
+    double amount, {
+    MoneyCurrency currency = MoneyCurrency.rsd,
+  }) async {
+    final cost = FixedCost(
+        id: _ids.next(), name: name, amount: amount, currency: currency);
     // Creation time keeps new items after the existing ones.
     final order = DateTime.now().millisecondsSinceEpoch;
     _write(_docs.fixedCosts
@@ -41,10 +47,11 @@ class FixedCostRepository {
   }
 
   Future<void> updateFixedCost(String id,
-      {String? name, double? amount}) async {
+      {String? name, double? amount, MoneyCurrency? currency}) async {
     _write(_docs.fixedCosts.doc(id).update({
       'name': ?name,
       'amount': ?amount,
+      if (currency != null) 'currency': currency.name,
     }));
   }
 

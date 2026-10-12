@@ -8,15 +8,19 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
 - **Budget** — categories with budget and spending, progress bars, totals and
   days until reset (in dinars).
 - **Monthly income** — enter your salary (or total monthly budget) to see how
-  much is allocated to categories or moved to savings, what is unallocated and
-  what is left after spending. It carries over to the next month.
+  much is allocated to categories, paid in fixed costs or moved to savings,
+  what is unallocated and what is left after spending. It carries over to the
+  next month.
 - **Fixed costs** — recurring monthly items (rent, utilities, subscriptions)
-  with their amounts and the monthly total; kept across months.
-- **Savings** — funds (e.g. emergency fund, holiday) with an optional opening
-  balance and goal; record deposits and withdrawals, with history per fund.
-  Net savings for the month count against the monthly income.
-- **Loans** — who owes you and whom you owe, with repayments, what is left and
-  the net balance; settled loans are kept in a collapsed section.
+  with their amounts and the monthly total; kept across months. They come out
+  of the monthly income in full every month.
+- **Savings** — funds (e.g. emergency fund, holiday) in dinars or euros, with
+  an optional opening balance and goal; record deposits and withdrawals, with
+  history per fund. Net dinar savings for the month count against the monthly
+  income; euro funds are totalled on their own (there is no exchange rate).
+- **Loans** — who owes you and whom you owe, in dinars or euros, with
+  repayments, what is left and the net balance per currency; settled loans are
+  kept in a collapsed section.
 - **Lists** — from the drawer: named checklists (groceries, a trip, car
   parts) with items, an optional planned amount each and a tick when bought or
   done; the total and what is left sit on top. Lists are plans: they stay out
@@ -37,6 +41,15 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
   gold like gold); System / Light / Dark, remembered between launches.
 - **Languages** — Serbian (Latin) and English, toggled from the drawer and
   remembered.
+
+## Dinars and euros
+
+Every amount can be in dinars or euros: categories (their budget and every
+expense), the monthly income (a dinar part and a euro part), fixed costs,
+savings funds, loans and lists. Totals are always kept **per currency** — one
+block for dinars, one for euros — and never converted: there is no exchange
+rate. Each currency's income only carries its own categories and savings.
+Data recorded before currencies existed reads as dinars.
 
 ## Accounts and data
 

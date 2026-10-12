@@ -9,6 +9,8 @@ mixin FixedCostStringsEn implements FixedCostStrings {
   @override
   String get fixedCostsTotal => 'Monthly total:';
   @override
+  String get fixedCostsRow => 'Fixed costs:';
+  @override
   String get addFixedCost => 'Add fixed cost';
   @override
   String get newFixedCost => 'New fixed cost';

@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:budget_tracker/models/money_currency.dart';
 import 'package:budget_tracker/models/savings_fund.dart';
+import 'package:budget_tracker/models/savings_totals.dart';
 import 'package:budget_tracker/models/transaction.dart';
 import 'package:budget_tracker/services/savings_repository.dart';
 
@@ -32,7 +34,7 @@ void main() {
     await repo.withdraw(fund.id, 3000, '');
 
     await settle();
-    expect(await repo.netSavedInMonth(DateTime.now()), 7000);
+    expect(await repo.netSavedInMonth(DateTime.now()), {MoneyCurrency.rsd: 7000});
   });
 
   test('netInMonth ignores entries from other months', () {
@@ -73,5 +75,70 @@ void main() {
     await repo.deleteFund(fund.id);
     await settle();
     expect(await repo.funds(), isEmpty);
+  });
+
+  test('a euro fund keeps its currency and its own monthly sum',
+      () async {
+    final repo = await openRepo();
+    final dinars = await repo.addFund('Hitni fond');
+    final euros = await repo.addFund('Devize',
+        openingBalance: 1000, currency: MoneyCurrency.eur);
+    await repo.deposit(dinars.id, 5000, '');
+    await repo.deposit(euros.id, 100, '');
+    await settle();
+
+    final saved = (await repo.funds()).firstWhere((f) => f.id == euros.id);
+    expect(saved.currency, MoneyCurrency.eur);
+    expect(saved.balance, 1100);
+    // Each currency is summed on its own.
+    expect(await repo.netSavedInMonth(DateTime.now()),
+        {MoneyCurrency.rsd: 5000, MoneyCurrency.eur: 100});
+
+    await repo.updateFund(euros.id, currency: MoneyCurrency.rsd);
+    await settle();
+    expect(await repo.netSavedInMonth(DateTime.now()), {MoneyCurrency.rsd: 5100});
+  });
+
+  test('funds recorded before currencies existed are in dinars', () {
+    final fund = SavingsFund.fromJson({
+      'id': 'f',
+      'name': 'Stari fond',
+      'color': '#000000',
+      'createdAt': '2026-09-01T00:00:00.000',
+    });
+    expect(fund.currency, MoneyCurrency.rsd);
+    expect(fund.toJson()['currency'], 'rsd');
+  });
+
+  test('totals are kept per currency', () {
+    SavingsFund fund(String id, MoneyCurrency c, double opening,
+            List<Transaction> entries) =>
+        SavingsFund(
+          id: id,
+          name: id,
+          color: '#000000',
+          createdAt: '2026-09-01T00:00:00.000',
+          openingBalance: opening,
+          currency: c,
+          entries: entries,
+        );
+    final totals = SavingsTotals.of([
+      fund('a', MoneyCurrency.rsd, 50000, [
+        const Transaction(
+            id: 'a1', amount: 2000, description: '', date: '2026-10-02T10:00:00.000'),
+      ]),
+      fund('b', MoneyCurrency.eur, 1000, [
+        const Transaction(
+            id: 'b1', amount: 100, description: '', date: '2026-10-03T10:00:00.000'),
+        const Transaction(
+            id: 'b2', amount: -30, description: '', date: '2026-09-20T10:00:00.000'),
+      ]),
+    ], DateTime(2026, 10, 15));
+
+    expect(totals.map((t) => t.currency), [MoneyCurrency.rsd, MoneyCurrency.eur]);
+    expect(totals[0].balance, 52000);
+    expect(totals[0].thisMonth, 2000);
+    expect(totals[1].balance, 1070);
+    expect(totals[1].thisMonth, 100);
   });
 }

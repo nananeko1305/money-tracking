@@ -44,7 +44,7 @@ class SavingsFundCard extends StatelessWidget {
         children: [
           _header(context, color, pal),
           const SizedBox(height: 8),
-          AmountRow(t.savingsBalance, t.din(fund.balance),
+          AmountRow(t.savingsBalance, t.money(fund.balance, fund.currency),
               color: pal.positive, emphasized: true),
           if (fund.hasTarget) ..._goal(context, color, pal),
           const SizedBox(height: 12),
@@ -118,7 +118,7 @@ class SavingsFundCard extends StatelessWidget {
     final percent = fund.percentOfTarget;
     return [
       const SizedBox(height: 4),
-      AmountRow(t.savingsGoal, t.din(fund.target)),
+      AmountRow(t.savingsGoal, t.money(fund.target, fund.currency)),
       const SizedBox(height: 10),
       ClipRRect(
         borderRadius: BorderRadius.circular(4),

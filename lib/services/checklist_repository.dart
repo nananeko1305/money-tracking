@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show Listenable;
 
 import '../models/checklist.dart';
 import '../models/checklist_item.dart';
+import '../models/money_currency.dart';
 import 'app_data_encoder.dart';
 import 'batch_commits.dart';
 import 'id_generator.dart';
@@ -32,18 +33,28 @@ class ChecklistRepository {
   Future<List<Checklist>> checklists() async =>
       (await _session.live.ready()).checklists;
 
-  Future<Checklist> addChecklist(String name) async {
+  Future<Checklist> addChecklist(
+    String name, {
+    MoneyCurrency currency = MoneyCurrency.rsd,
+  }) async {
     final list = Checklist(
       id: _ids.next(),
       name: name,
+      currency: currency,
       createdAt: DateTime.now().toIso8601String(),
     );
     _write(_docs.checklists.doc(list.id).set(_encoder.checklist(list)));
     return list;
   }
 
-  Future<void> renameChecklist(String id, String name) async =>
-      _write(_docs.checklists.doc(id).update({'name': name}));
+  /// Changing the currency moves the list's planned amounts with it.
+  Future<void> updateChecklist(String id,
+      {String? name, MoneyCurrency? currency}) async {
+    _write(_docs.checklists.doc(id).update({
+      'name': ?name,
+      if (currency != null) 'currency': currency.name,
+    }));
+  }
 
   /// Deletes the checklist together with its items.
   Future<void> deleteChecklist(String id) async {

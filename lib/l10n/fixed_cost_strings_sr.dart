@@ -9,6 +9,8 @@ mixin FixedCostStringsSr implements FixedCostStrings {
   @override
   String get fixedCostsTotal => 'Ukupno mesečno:';
   @override
+  String get fixedCostsRow => 'Fiksni troškovi:';
+  @override
   String get addFixedCost => 'Dodaj fiksni trošak';
   @override
   String get newFixedCost => 'Novi fiksni trošak';

@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart' show Listenable;
 
+import '../models/currency_sums.dart';
+import '../models/money_currency.dart';
 import '../models/savings_fund.dart';
 import '../models/transaction.dart';
 import 'app_data_encoder.dart';
@@ -36,14 +38,17 @@ class SavingsRepository {
   Future<List<SavingsFund>> funds() async =>
       (await _session.live.ready()).savingsFunds;
 
-  /// Net amount moved into all funds during the calendar month of [month].
-  Future<double> netSavedInMonth(DateTime month) async =>
-      (await funds()).fold<double>(0.0, (s, f) => s + f.netInMonth(month));
+  /// Net amount moved into the funds during the calendar month of [month],
+  /// per currency: what comes out of that currency's monthly income.
+  Future<Map<MoneyCurrency, double>> netSavedInMonth(DateTime month) async =>
+      sumByCurrency(
+          await funds(), (f) => f.currency, (f) => f.netInMonth(month));
 
   Future<SavingsFund> addFund(
     String name, {
     double target = 0,
     double openingBalance = 0,
+    MoneyCurrency currency = MoneyCurrency.rsd,
   }) async {
     final fund = SavingsFund(
       id: _ids.next(),
@@ -52,6 +57,7 @@ class SavingsRepository {
       createdAt: DateTime.now().toIso8601String(),
       target: target,
       openingBalance: openingBalance,
+      currency: currency,
     );
     _write(_docs.savingsFunds.doc(fund.id).set(_encoder.savingsFund(fund)));
     return fund;
@@ -62,11 +68,13 @@ class SavingsRepository {
     String? name,
     double? target,
     double? openingBalance,
+    MoneyCurrency? currency,
   }) async {
     _write(_docs.savingsFunds.doc(id).update({
       'name': ?name,
       'target': ?target,
       'openingBalance': ?openingBalance,
+      if (currency != null) 'currency': currency.name,
     }));
   }
 

@@ -84,13 +84,13 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           ),
           child: Column(
             children: [
-              _summaryRow(t.budget, t.din(category.budget), null),
+              _summaryRow(t.budget, t.money(category.budget, category.currency), null),
               const SizedBox(height: 6),
-              _summaryRow(t.spent, t.din(category.spent), pal.spent),
+              _summaryRow(t.spent, t.money(category.spent, category.currency), pal.spent),
               const SizedBox(height: 6),
               _summaryRow(
                 t.remaining,
-                t.din(category.remaining),
+                t.money(category.remaining, category.currency),
                 category.remaining < 0 ? pal.danger : pal.positive,
               ),
             ],
@@ -102,7 +102,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
             emptyText: t.noTransactions,
             titleOf: (tx) =>
                 tx.description.isEmpty ? t.expense : tx.description,
-            amountOf: (tx) => t.din(tx.amount),
+            amountOf: (tx) => t.money(tx.amount, category.currency),
             colorOf: (_) => pal.spent,
             onDelete: _deleteTransaction,
           ),

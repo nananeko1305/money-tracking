@@ -52,7 +52,8 @@ class MonthCloser {
       if (_live.confirmedByServer && !_startedAccount) {
         _startedAccount = true;
         _writes.track(_docs.profile.set(
-          _encoder.profile(currentMonth: current, monthlyIncome: 0),
+          _encoder.profile(
+              currentMonth: current, monthlyIncome: 0, monthlyIncomeEur: 0),
           SetOptions(merge: true),
         ));
       }

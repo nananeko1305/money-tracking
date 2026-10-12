@@ -29,7 +29,7 @@ void main() {
     expect(list.left, 80);
 
     await repo.updateItem(milk.id, name: 'Mleko 2l', amount: 250);
-    await repo.renameChecklist(market.id, 'Maxi');
+    await repo.updateChecklist(market.id, name: 'Maxi');
     await settle();
     list = (await repo.checklists()).single;
     expect(list.name, 'Maxi');

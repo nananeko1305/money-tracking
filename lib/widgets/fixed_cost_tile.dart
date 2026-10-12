@@ -45,7 +45,7 @@ class FixedCostTile extends StatelessWidget {
                 ),
               ),
               Text(
-                t.din(cost.amount),
+                t.money(cost.amount, cost.currency),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
