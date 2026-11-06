@@ -127,6 +127,17 @@
       background: var(--green);
     }
 
+    .btn.share {
+      padding: 12px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--green);
+      background: transparent;
+      border: 2px solid var(--green);
+      cursor: pointer;
+    }
+
     .qr {
       margin: 24px auto 8px;
       width: 180px;
@@ -177,6 +188,53 @@
       font-size: 11px;
       color: var(--muted);
     }
+
+    /* Laptops and desktops: the card becomes the whole screen, split in two,
+       and nothing scrolls. Sizes follow the window height so it all fits.
+       Phones keep the layout above. */
+    @media (min-width: 900px) {
+      html, body { height: 100%; overflow: hidden; }
+      body { padding: 0; }
+
+      .card {
+        max-width: none;
+        height: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 5vh 4vw;
+      }
+      .header .icon { font-size: clamp(64px, 14vh, 120px); }
+      .header h1 { margin: 3vh 0 1vh; font-size: clamp(28px, 6vh, 52px); }
+      .header p { font-size: clamp(15px, 2.6vh, 22px); }
+
+      .body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4vh 4vw;
+      }
+      .body > * { width: 100%; max-width: 420px; }
+      .meta { margin-bottom: 2.5vh; }
+      .qr {
+        width: clamp(120px, 24vh, 220px);
+        height: clamp(120px, 24vh, 220px);
+        margin: 2.5vh auto 1vh;
+      }
+      .note { margin-top: 2vh; }
+      .checksum { margin-top: 1.5vh; }
+      .footer { margin-top: 1.5vh; }
+    }
   </style>
 
 </head>
@@ -207,6 +265,8 @@
       🤖 Download for Android
     </a>
 
+    <button class="btn share" id="share" type="button">🔗 Share</button>
+
   </div>
 
   <div class="qr">
@@ -235,5 +295,27 @@
 </div>
 
   </main>
+
+  <script>
+    // Shares this page rather than the APK link: the page has the QR code and
+    // the install steps. Browsers without a share sheet (most desktop ones)
+    // copy the link instead.
+    const shareBtn = document.getElementById('share');
+    const shareLabel = shareBtn.textContent;
+    shareBtn.addEventListener('click', async () => {
+      const url = location.origin + location.pathname;
+      if (navigator.share) {
+        try { await navigator.share({ title: document.title, url }); } catch (_) {}
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        shareBtn.textContent = '✓ Link copied';
+        setTimeout(() => { shareBtn.textContent = shareLabel; }, 2000);
+      } catch (_) {
+        prompt('Copy the link:', url);
+      }
+    });
+  </script>
 </body>
 </html>
