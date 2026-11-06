@@ -3,6 +3,11 @@ name: Build & Release APK
 on:
   push:
     branches: [main]
+    # A change to the download page alone is not a release: pages.yml
+    # redeploys the page for the current APK instead.
+    paths-ignore:
+      - '.github/pages/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 # Needed to publish a Release (contents) and deploy the download page (pages).
@@ -194,18 +199,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build static site
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
           sudo apt-get update && sudo apt-get install -y qrencode
-          DL="https://github.com/${{ github.repository }}/releases/latest/download/${{ env.APK_NAME }}"
-          mkdir -p _site
-          cp .github/pages/index.html _site/index.html
-          qrencode -o _site/qr.png -s 8 -m 2 "$DL"
-          sed -i \
-            -e "s|__DOWNLOAD_URL__|$DL|g" \
-            -e "s|__VERSION__|${{ needs.build.outputs.version }}|g" \
-            -e "s|__DATE__|$(date -u +%Y-%m-%d)|g" \
-            -e "s|__SHA256__|${{ needs.build.outputs.sha256 }}|g" \
-            _site/index.html
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/latest/download/${{ env.APK_NAME }}" \
+          DATE="$(date -u +%Y-%m-%d)" \
+            bash .github/pages/build.sh
 
       - uses: actions/configure-pages@v5
         with:
