@@ -5,8 +5,8 @@ import 'live_user_data.dart';
 import 'user_collections.dart';
 import 'write_errors.dart';
 
-/// Replaces everything an account holds with a given [AppData]: importing a
-/// backup file, or moving the data kept on the phone before accounts existed.
+/// Replaces everything an account holds with a given [AppData]: the data
+/// kept on the phone before accounts existed, moved to the account.
 /// Documents missing from the new data are deleted, the rest overwritten.
 class AccountReplacer {
   AccountReplacer(

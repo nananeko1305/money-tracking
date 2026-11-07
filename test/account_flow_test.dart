@@ -4,11 +4,13 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mock_exceptions/mock_exceptions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:budget_tracker/app.dart';
+import 'package:budget_tracker/theme.dart';
 import 'package:budget_tracker/services/legacy_local_data.dart';
 
 /// Sign-in, sign-out and moving the on-phone data to the account, through
@@ -40,7 +42,9 @@ void main() {
         findsOneWidget);
 
     await signIn(tester);
-    await tapText(tester, 'Ne sada'); // empty account: no backup restore
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     expect(find.text('Dodaj kategoriju'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.menu));
@@ -55,6 +59,15 @@ void main() {
     await tester.ensureVisible(find.text('Odjavi se'));
     await tester.pumpAndSettle();
     expect(find.text('ana@example.com'), findsOneWidget);
+    // Data lives on the account: there is no file export / import any more.
+    expect(find.text('Izvezi podatke'), findsNothing);
+    expect(find.text('Uvezi podatke'), findsNothing);
+    // Signing out is red, text and icon.
+    final danger = palette(tester.element(find.text('Odjavi se'))).danger;
+    expect(tester.renderObject<RenderParagraph>(find.text('Odjavi se'))
+        .text.style?.color, danger);
+    expect(
+        IconTheme.of(tester.element(find.byIcon(Icons.logout))).color, danger);
     await tapText(tester, 'Odjavi se'); // drawer item
     await tapText(tester, 'Odjavi se'); // confirm
     expect(find.text('Prijavi se nalogom koji ti je napravio admin.'),
@@ -108,6 +121,9 @@ void main() {
 
     expect(find.text('Prenesi podatke na nalog'), findsOneWidget);
     await tapText(tester, 'Prenesi');
+    await tester.dragUntilVisible(find.text('Stara kategorija'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     expect(find.text('Stara kategorija'), findsOneWidget);
     expect(await tester.runAsync(() => LegacyLocalData().pending()), isNull);
     // Moving never deletes or rewrites what is on the phone.
@@ -124,8 +140,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tapText(tester, 'Ne sada'); // the move
-    await tapText(tester, 'Ne sada'); // then the backup-file restore
+    await tapText(tester, 'Ne sada');
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(find.text('Dodaj kategoriju'), findsOneWidget);
     expect(await legacyOnPhone(tester), legacyBlob);
     expect(await tester.runAsync(() => LegacyLocalData().pending()), isNotNull);
   });
@@ -151,5 +170,8 @@ void main() {
     expect(await legacy.pending(), isNotNull);
     await legacy.markMoved('ana');
     expect(await legacy.pending(), isNull);
+
+    SharedPreferences.setMockInitialValues({'budget_app_data': '{not json'});
+    expect(await LegacyLocalData().pending(), isNull);
   });
 }

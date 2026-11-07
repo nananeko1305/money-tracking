@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../theme.dart';
 
 /// The drawer's account section: who is signed in, changing the password and
-/// signing out. Each action closes the drawer first.
+/// signing out, which is red. Each action closes the drawer first.
 class DrawerAccountSection extends StatelessWidget {
   const DrawerAccountSection({
     super.key,
@@ -19,6 +20,7 @@ class DrawerAccountSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppScope.of(context).strings;
+    final danger = palette(context).danger;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -44,6 +46,8 @@ class DrawerAccountSection extends StatelessWidget {
           },
         ),
         ListTile(
+          iconColor: danger,
+          textColor: danger,
           leading: const Icon(Icons.logout),
           title: Text(t.signOut),
           onTap: () {

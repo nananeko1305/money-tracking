@@ -9,16 +9,18 @@ import 'currency_selector.dart';
 /// The values entered in the savings fund add / edit form.
 class SavingsFundFormResult {
   final String name;
-  final double openingBalance;
+  final Map<MoneyCurrency, double> openingBalances;
   final double target;
-  final MoneyCurrency currency;
+  final MoneyCurrency currency; // the goal's
   const SavingsFundFormResult(
-      this.name, this.openingBalance, this.target, this.currency);
+      this.name, this.openingBalances, this.target, this.currency);
 }
 
 /// Shows the add / edit savings fund dialog. Returns the entered values, or
 /// null if it was dismissed. Pass [existing] to prefill the fields for editing.
-/// The opening balance and goal are optional; left empty they are 0.
+/// A fund can already hold dinars and euros, so there is an opening balance
+/// for each; the goal is in one currency, picked under it. All are optional;
+/// left empty they are 0.
 Future<SavingsFundFormResult?> showSavingsFundFormDialog(
   BuildContext context, {
   SavingsFund? existing,
@@ -26,8 +28,10 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
   final t = AppScope.of(context).strings;
   String prefill(double? v) => v != null && v > 0 ? amountInputText(v) : '';
   final nameController = TextEditingController(text: existing?.name ?? '');
-  final openingController =
-      TextEditingController(text: prefill(existing?.openingBalance));
+  final openingControllers = {
+    for (final c in MoneyCurrency.values)
+      c: TextEditingController(text: prefill(existing?.openingIn(c))),
+  };
   final targetController =
       TextEditingController(text: prefill(existing?.target));
 
@@ -40,11 +44,12 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
     builder: (ctx) => AlertDialog(
       title: Text(existing == null ? t.newSavings : t.editSavings),
       content: SingleChildScrollView(
-        // One builder for the whole form: the amount fields' currency suffix
-        // follows the currency selector.
+        // One builder for the whole form: the goal's currency suffix follows
+        // the currency selector under it.
         child: StatefulBuilder(
           builder: (_, setState) => Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: nameController,
@@ -54,22 +59,22 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
                   hintText: t.savingsNameHint,
                 ),
               ),
-              const SizedBox(height: 12),
-              CurrencySelector(
-                selected: currency,
-                onChanged: (c) => setState(() => currency = c),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: openingController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: t.openingBalanceLabel,
-                  helperText: t.openingBalanceHelp,
-                  suffixText: t.currencySymbol(currency),
+              const SizedBox(height: 16),
+              Text(t.openingBalanceLabel,
+                  style: TextStyle(color: Theme.of(context).hintColor)),
+              for (final (i, c) in MoneyCurrency.values.indexed)
+                TextField(
+                  controller: openingControllers[c],
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: c == MoneyCurrency.rsd ? t.dinars : t.euros,
+                    helperText: i == MoneyCurrency.values.length - 1
+                        ? t.openingBalanceHelp
+                        : null,
+                    suffixText: t.currencySymbol(c),
+                  ),
                 ),
-              ),
               const SizedBox(height: 12),
               TextField(
                 controller: targetController,
@@ -80,6 +85,11 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
                   hintText: t.savingsGoalHint,
                   suffixText: t.currencySymbol(currency),
                 ),
+              ),
+              const SizedBox(height: 8),
+              CurrencySelector(
+                selected: currency,
+                onChanged: (c) => setState(() => currency = c),
               ),
             ],
           ),
@@ -93,11 +103,14 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
         FilledButton(
           onPressed: () {
             final name = nameController.text.trim();
-            final opening = optionalAmount(openingController);
+            final openings = {
+              for (final MapEntry(key: c, value: controller)
+                  in openingControllers.entries)
+                c: optionalAmount(controller),
+            };
             final target = optionalAmount(targetController);
             if (name.isEmpty ||
-                opening == null ||
-                opening < 0 ||
+                openings.values.any((v) => v == null || v < 0) ||
                 target == null ||
                 target < 0) {
               ScaffoldMessenger.of(ctx).showSnackBar(
@@ -106,7 +119,16 @@ Future<SavingsFundFormResult?> showSavingsFundFormDialog(
               return;
             }
             Navigator.pop(
-                ctx, SavingsFundFormResult(name, opening, target, currency));
+                ctx,
+                SavingsFundFormResult(
+                    name,
+                    {
+                      for (final MapEntry(key: c, value: v)
+                          in openings.entries)
+                        if (v! > 0) c: v,
+                    },
+                    target,
+                    currency));
           },
           child: Text(t.save),
         ),

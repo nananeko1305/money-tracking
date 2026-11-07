@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:budget_tracker/models/app_data.dart';
 import 'package:budget_tracker/services/budget_repository.dart';
 import 'package:budget_tracker/services/fixed_cost_repository.dart';
 
@@ -48,39 +47,27 @@ void main() {
     expect((await fixed.fixedCosts()).single.name, 'Kirija');
   });
 
-  test('fixed costs round-trip through backup export / import', () async {
-    final source = await openFakeSession();
-    await FixedCostRepository(source).addFixedCost('Struja', 4200);
-    await settle();
-    final exported = await BudgetRepository(source).exportJson();
-
-    final target = await openFakeSession();
-    expect(await BudgetRepository(target).importJson(exported), isTrue);
-    await settle();
-    final costs = await FixedCostRepository(target).fixedCosts();
+  test('fixed costs kept on the phone move to the account', () async {
+    final session = await openFakeSession();
+    await moveLocalData(session, {
+      'currentCategories': [],
+      'monthlyReports': [],
+      'lastResetDate': DateTime.now().toIso8601String(),
+      'fixedCosts': [
+        {'id': 'f1', 'name': 'Struja', 'amount': 4200},
+      ],
+    });
+    final costs = await FixedCostRepository(session).fixedCosts();
     expect(costs.single.name, 'Struja');
     expect(costs.single.amount, 4200);
   });
 
-  test('a backup without fixed costs imports with an empty list', () async {
-    final session = await openFakeSession();
-    final ok = await BudgetRepository(session).importJson(jsonEncode({
+  test('on-phone data from before fixed costs has none', () {
+    final data = AppData.fromJson({
       'currentCategories': [],
       'monthlyReports': [],
       'lastResetDate': '2026-09-01T00:00:00.000Z',
-    }));
-    expect(ok, isTrue);
-    await settle();
-    expect(await FixedCostRepository(session).fixedCosts(), isEmpty);
-  });
-
-  test('an invalid backup is rejected and changes nothing', () async {
-    final session = await openFakeSession();
-    await FixedCostRepository(session).addFixedCost('Kirija', 30000);
-    await settle();
-
-    expect(await BudgetRepository(session).importJson('{not json'), isFalse);
-    await settle();
-    expect(await FixedCostRepository(session).fixedCosts(), hasLength(1));
+    });
+    expect(data.fixedCosts, isEmpty);
   });
 }

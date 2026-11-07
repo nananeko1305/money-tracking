@@ -56,7 +56,7 @@ class SavingsScreenState extends State<SavingsScreen> {
     if (result == null) return;
     await widget.storage.addFund(result.name,
         target: result.target,
-        openingBalance: result.openingBalance,
+        openingBalances: result.openingBalances,
         currency: result.currency);
     await reload();
   }
@@ -67,7 +67,7 @@ class SavingsScreenState extends State<SavingsScreen> {
     await widget.storage.updateFund(fund.id,
         name: result.name,
         target: result.target,
-        openingBalance: result.openingBalance,
+        openingBalances: result.openingBalances,
         currency: result.currency);
     await reload();
   }
@@ -92,9 +92,10 @@ class SavingsScreenState extends State<SavingsScreen> {
     final entry = await showAmountEntryDialog(context,
         title: t.depositTitle,
         confirmLabel: t.deposit,
-        amountSuffix: t.currencySymbol(fund.currency));
+        currency: fund.currency);
     if (entry == null) return;
-    await widget.storage.deposit(fund.id, entry.amount, entry.description);
+    await widget.storage.deposit(fund.id, entry.amount, entry.description,
+        currency: entry.currency);
     await reload();
   }
 
@@ -104,13 +105,16 @@ class SavingsScreenState extends State<SavingsScreen> {
     final entry = await showAmountEntryDialog(context,
         title: t.withdrawTitle,
         confirmLabel: t.withdraw,
-        amountSuffix: t.currencySymbol(fund.currency));
+        currency: fund.currency);
     if (entry == null) return;
-    if (entry.amount > fund.balance + 0.005) {
+    final currency = entry.currency ?? fund.currency;
+    // Only the money in the picked currency can be taken out.
+    if (entry.amount > fund.balanceIn(currency) + 0.005) {
       messenger.showSnackBar(SnackBar(content: Text(t.insufficientSavings)));
       return;
     }
-    await widget.storage.withdraw(fund.id, entry.amount, entry.description);
+    await widget.storage.withdraw(fund.id, entry.amount, entry.description,
+        currency: currency);
     await reload();
   }
 

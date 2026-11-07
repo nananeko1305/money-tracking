@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart' show SetOptions;
 import 'package:flutter/foundation.dart' show Listenable;
 
@@ -8,6 +6,7 @@ import '../models/category.dart';
 import '../models/money_currency.dart';
 import '../models/monthly_report.dart';
 import '../models/transaction.dart';
+import '../models/weekly_spending.dart';
 import 'app_data_encoder.dart';
 import 'batch_commits.dart';
 import 'category_palette.dart';
@@ -17,7 +16,7 @@ import 'user_collections.dart';
 import 'user_session.dart';
 
 /// Application-facing budget operations on the signed-in account: the monthly
-/// income, categories and their expenses, reports, and backup import / export.
+/// income, categories and their expenses, and reports.
 /// Reads come from the live view; every change goes straight to its own
 /// document and is not awaited (see [WriteErrors]). Closing the month is the
 /// [MonthCloser]'s job.
@@ -70,15 +69,40 @@ class BudgetRepository {
         SetOptions(merge: true),
       ));
 
+  /// What may be spent in one week (Monday to Sunday) in each currency, over
+  /// all categories. 0 means it has not been set.
+  Future<Map<MoneyCurrency, double>> weeklyBudgets() async {
+    final data = await _data();
+    return {for (final c in MoneyCurrency.values) c: data.weeklyBudgetIn(c)};
+  }
+
+  /// Sets the weekly budget in dinars and in euros; 0 clears one. It holds
+  /// every week until it is changed.
+  Future<void> setWeeklyBudget({required double rsd, required double eur}) async =>
+      _write(_docs.profile.set(
+        {'weeklyBudget': rsd, 'weeklyBudgetEur': eur},
+        SetOptions(merge: true),
+      ));
+
+  /// What has been spent so far this week, per category and per currency.
+  Future<WeeklySpending> weeklySpending() async {
+    final data = await _data();
+    return WeeklySpending.of(data.currentCategories, data.monthlyReports,
+        now: DateTime.now());
+  }
+
+  /// [weeklyLimit] 0 means the category has no weekly limit.
   Future<Category> addCategory(
     String name,
     double budget, {
     MoneyCurrency currency = MoneyCurrency.rsd,
+    double weeklyLimit = 0,
   }) async {
     final category = Category(
       id: _ids.next(),
       name: name,
       budget: budget,
+      weeklyLimit: weeklyLimit,
       currency: currency,
       color: _palette.randomColor(),
       createdAt: DateTime.now().toIso8601String(),
@@ -87,12 +111,17 @@ class BudgetRepository {
     return category;
   }
 
-  /// Changing the currency moves the category's expenses with it.
+  /// Changing the currency moves the category's expenses with it. A
+  /// [weeklyLimit] of 0 removes the weekly limit.
   Future<void> updateCategory(String id,
-      {String? name, double? budget, MoneyCurrency? currency}) async {
+      {String? name,
+      double? budget,
+      double? weeklyLimit,
+      MoneyCurrency? currency}) async {
     _write(_docs.categories.doc(id).update({
       'name': ?name,
       'budget': ?budget,
+      'weeklyLimit': ?weeklyLimit,
       if (currency != null) 'currency': currency.name,
     }));
   }
@@ -130,23 +159,4 @@ class BudgetRepository {
 
   /// Days remaining until the first of next month.
   int daysUntilReset() => _rollover.daysUntilReset();
-
-  /// Serialises the account's data for backup, in the same format the app
-  /// has always exported.
-  Future<String> exportJson() async =>
-      const JsonEncoder.withIndent('  ').convert((await _data()).toJson());
-
-  /// Replaces the account's data with a backup. Returns false when [raw] is
-  /// not a valid backup.
-  Future<bool> importJson(String raw) async {
-    final AppData data;
-    try {
-      data = AppData.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } catch (_) {
-      return false;
-    }
-    await _data();
-    _session.replacer.replaceWith(data);
-    return true;
-  }
 }

@@ -34,7 +34,7 @@ void main() {
           name: 'Hitni fond',
           color: '#4ECDC4',
           createdAt: '2026-08-01T00:00:00.000',
-          openingBalance: 100000,
+          openingBalances: {MoneyCurrency.rsd: 100000},
           entries: [
             _tx('a', 5000, '2026-08-20T12:00:00.000'), // previous month
             _tx('b', 20000, '2026-09-05T12:00:00.000'),
@@ -68,7 +68,7 @@ void main() {
     // Categories reset; income, savings and loans carry over untouched.
     expect(data.currentCategories.single.transactions, isEmpty);
     expect(data.monthlyIncome, 120000);
-    expect(data.savingsFunds.single.balance, 122000);
+    expect(data.savingsFunds.single.balanceIn(MoneyCurrency.rsd), 122000);
     expect(data.loans.single.remaining, 10000);
   });
 
@@ -101,13 +101,29 @@ void main() {
           currency: MoneyCurrency.eur,
           entries: [_tx('e', 300, '2026-09-06T10:00:00.000')],
         ),
+        // One fund with both: each entry counts in its own currency.
+        SavingsFund(
+          id: 'both',
+          name: 'Hitni fond',
+          color: '#000000',
+          createdAt: '2026-09-01T00:00:00.000',
+          entries: [
+            _tx('f', 1000, '2026-09-07T10:00:00.000'),
+            Transaction(
+                id: 'g',
+                amount: 50,
+                description: '',
+                date: '2026-09-08T10:00:00.000',
+                currency: MoneyCurrency.eur),
+          ],
+        ),
       ],
     );
 
     expect(const MonthlyRollover().apply(data, now: DateTime(2026, 10, 1)),
         isTrue);
     final report = data.monthlyReports.single;
-    expect(report.totalsIn(MoneyCurrency.rsd).saved, 4000);
-    expect(report.totalsIn(MoneyCurrency.eur).saved, 300);
+    expect(report.totalsIn(MoneyCurrency.rsd).saved, 5000);
+    expect(report.totalsIn(MoneyCurrency.eur).saved, 350);
   });
 }

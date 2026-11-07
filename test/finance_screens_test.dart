@@ -28,8 +28,6 @@ void main() {
       firestore: FakeFirebaseFirestore(),
     ));
     await tester.pumpAndSettle();
-    // An empty account first offers to restore a backup; decline it.
-    await tapText(tester, 'Ne sada');
   }
 
   testWidgets('setting the monthly income shows the breakdown',
@@ -66,10 +64,12 @@ void main() {
     expect(find.text('90.000 din'), findsNWidgets(2)); // unallocated, left
 
     // A category budget is allocated out of the income.
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     await tapText(tester, 'Dodaj kategoriju');
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(fields.evaluate().length - 2), 'Hrana');
-    await tester.enterText(fields.last, '40000');
+    await tester.enterText(find.widgetWithText(TextField, 'Naziv'), 'Hrana');
+    await tester.enterText(find.widgetWithText(TextField, 'Budžet'), '40000');
     await tapText(tester, 'Sačuvaj');
     expect(find.text('50.000 din'), findsOneWidget); // unallocated
   });
@@ -89,9 +89,8 @@ void main() {
         find.byType(ListView).hitTestable().first, const Offset(0, -300));
     await tester.pumpAndSettle();
     await tapText(tester, 'Dodaj kategoriju');
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(fields.evaluate().length - 2), 'More');
-    await tester.enterText(fields.last, '500');
+    await tester.enterText(find.widgetWithText(TextField, 'Naziv'), 'More');
+    await tester.enterText(find.widgetWithText(TextField, 'Budžet'), '500');
     await tapText(tester, 'Evri');
     await tapText(tester, 'Sačuvaj');
     expect(find.text('120.000 din'), findsNWidgets(3)); // dinars untouched
@@ -119,10 +118,10 @@ void main() {
     expect(find.text('Još nema štednje'), findsOneWidget);
 
     await tapText(tester, 'Dodaj štednju');
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'Hitni fond');
-    await tester.enterText(fields.at(1), '50000');
-    await tester.enterText(fields.at(2), '200000');
+    await tester.enterText(find.byType(TextField).at(0), 'Hitni fond');
+    await tester.enterText(find.widgetWithText(TextField, 'Dinari'), '50000');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Cilj (opciono)'), '200000');
     await tapText(tester, 'Sačuvaj');
 
     expect(find.text('Hitni fond'), findsOneWidget);
@@ -152,12 +151,14 @@ void main() {
     await tester.pumpAndSettle();
     await tapText(tester, 'Dodaj štednju');
     await tester.enterText(find.byType(TextField).at(0), 'Devize');
-    await tapText(tester, 'Evri');
-    await tester.enterText(find.byType(TextField).at(1), '1000');
-    expect(find.text('€'), findsNWidgets(2)); // opening balance and goal
+    await tester.enterText(find.widgetWithText(TextField, 'Evri'), '1000');
+    await tapText(tester, 'Evri'); // the goal's currency
+    expect(find.text('€'), findsNWidgets(2)); // euro opening balance and goal
     await tapText(tester, 'Sačuvaj');
     expect(find.text('1.000 €'), findsWidgets);
+    expect(find.textContaining('din'), findsNothing); // no dinars held
 
+    // Deposits start in the fund's currency.
     await tapText(tester, 'Uplati');
     expect(find.text('€'), findsOneWidget);
     await tester.enterText(find.byType(TextField).first, '100');
@@ -169,6 +170,50 @@ void main() {
     await tester.tap(find.byIcon(Icons.account_balance_wallet));
     await tester.pumpAndSettle();
     expect(find.text('120.000 din'), findsNWidgets(3));
+  });
+
+  testWidgets('one fund holds dinars and euros, each moved on its own',
+      (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.byIcon(Icons.savings));
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Dodaj štednju');
+    await tester.enterText(find.byType(TextField).at(0), 'Hitni fond');
+    await tester.enterText(find.widgetWithText(TextField, 'Dinari'), '50000');
+    await tester.enterText(find.widgetWithText(TextField, 'Evri'), '500');
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Cilj (opciono)'), '100000');
+    await tapText(tester, 'Sačuvaj');
+
+    // Both balances on the card and in the totals; the goal counts dinars.
+    expect(find.text('50.000 din'), findsNWidgets(2));
+    expect(find.text('500 €'), findsNWidgets(2));
+    expect(find.text('50% cilja'), findsOneWidget);
+
+    // A euro deposit into the dinar fund.
+    await tapText(tester, 'Uplati');
+    await tapText(tester, 'Evri');
+    expect(find.text('€'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '100');
+    await tapText(tester, 'Uplati');
+    expect(find.text('600 €'), findsNWidgets(2));
+    expect(find.text('+100 €'), findsOneWidget); // this month, in euros
+    expect(find.text('50.000 din'), findsNWidgets(2));
+
+    // Only the euros held can be taken out in euros.
+    await tapText(tester, 'Podigni');
+    await tapText(tester, 'Evri');
+    await tester.enterText(find.byType(TextField).first, '1000');
+    await tapText(tester, 'Podigni');
+    expect(find.text('Na štednji nema toliko novca'), findsOneWidget);
+    expect(find.text('600 €'), findsNWidgets(2));
+
+    // The history shows each entry in its own currency.
+    await tapText(tester, 'Hitni fond');
+    expect(find.text('+100 €'), findsOneWidget);
+    expect(find.text('Početno stanje:'), findsOneWidget);
+    expect(find.text('50.000 din'), findsNWidgets(2)); // balance, opening
+    expect(find.text('600 €'), findsOneWidget);
   });
 
   testWidgets('loans: add a loan, repay part, overview updates',

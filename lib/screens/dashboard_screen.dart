@@ -6,6 +6,7 @@ import '../models/category.dart';
 import '../models/currency_sums.dart';
 import '../models/income_totals.dart';
 import '../models/money_currency.dart';
+import '../models/weekly_spending.dart';
 import '../services/budget_repository.dart';
 import '../services/fixed_cost_repository.dart';
 import '../services/savings_repository.dart';
@@ -13,10 +14,12 @@ import '../theme.dart';
 import '../widgets/category_card.dart';
 import '../widgets/category_form_dialog.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/currency_amounts_dialog.dart';
 import '../widgets/days_banner.dart';
 import '../widgets/income_card.dart';
-import '../widgets/income_dialog.dart';
 import '../widgets/totals_card.dart';
+import '../widgets/weekly_budget_card.dart';
+import '../widgets/weekly_overrun_warning.dart';
 import 'category_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -40,6 +43,8 @@ class DashboardScreenState extends State<DashboardScreen> {
   Map<MoneyCurrency, double> _incomes = const {};
   Map<MoneyCurrency, double> _savedThisMonth = const {};
   Map<MoneyCurrency, double> _fixed = const {};
+  Map<MoneyCurrency, double> _weeklyBudgets = const {};
+  WeeklySpending _week = WeeklySpending.none;
   int _daysRemaining = 0;
   bool _loading = true;
 
@@ -63,19 +68,28 @@ class DashboardScreenState extends State<DashboardScreen> {
     final incomes = await widget.storage.monthlyIncomes();
     final saved = await widget.savings.netSavedInMonth(DateTime.now());
     final fixed = await widget.fixedCosts.fixedCosts();
+    final weeklyBudgets = await widget.storage.weeklyBudgets();
+    final week = await widget.storage.weeklySpending();
     if (!mounted) return;
     setState(() {
       _categories = cats;
       _incomes = incomes;
       _savedThisMonth = saved;
       _fixed = sumByCurrency(fixed, (c) => c.currency, (c) => c.amount);
+      _weeklyBudgets = weeklyBudgets;
+      _week = week;
       _daysRemaining = widget.storage.daysUntilReset();
       _loading = false;
     });
   }
 
   Future<void> _editIncome() async {
-    final incomes = await showIncomeDialog(context, current: _incomes);
+    final t = AppScope.of(context).strings;
+    final incomes = await showCurrencyAmountsDialog(context,
+        title: t.monthlyIncome,
+        hint: t.incomeHint,
+        help: t.incomeHelp,
+        current: _incomes);
     if (incomes == null) return;
     await widget.storage.setMonthlyIncome(
       rsd: incomes[MoneyCurrency.rsd] ?? 0,
@@ -84,11 +98,26 @@ class DashboardScreenState extends State<DashboardScreen> {
     await reload();
   }
 
+  Future<void> _editWeeklyBudget() async {
+    final t = AppScope.of(context).strings;
+    final budgets = await showCurrencyAmountsDialog(context,
+        title: t.weeklyBudget,
+        hint: t.weeklyBudgetHint,
+        help: t.weeklyBudgetHelp,
+        current: _weeklyBudgets);
+    if (budgets == null) return;
+    await widget.storage.setWeeklyBudget(
+      rsd: budgets[MoneyCurrency.rsd] ?? 0,
+      eur: budgets[MoneyCurrency.eur] ?? 0,
+    );
+    await reload();
+  }
+
   Future<void> _addCategory() async {
     final result = await showCategoryFormDialog(context);
     if (result == null) return;
-    await widget.storage
-        .addCategory(result.name, result.budget, currency: result.currency);
+    await widget.storage.addCategory(result.name, result.budget,
+        currency: result.currency, weeklyLimit: result.weeklyLimit);
     await reload();
   }
 
@@ -96,7 +125,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     final result = await showCategoryFormDialog(context, existing: category);
     if (result == null) return;
     await widget.storage.updateCategory(category.id,
-        name: result.name, budget: result.budget, currency: result.currency);
+        name: result.name,
+        budget: result.budget,
+        weeklyLimit: result.weeklyLimit,
+        currency: result.currency);
     await reload();
   }
 
@@ -115,9 +147,13 @@ class DashboardScreenState extends State<DashboardScreen> {
     await reload();
   }
 
+  /// Records the expense, then warns if it went past a weekly limit.
   Future<void> _addExpense(Category category, double amount, String desc) async {
+    final over = _week.overrunAfter(category, amount,
+        budget: _weeklyBudgets[category.currency] ?? 0);
     await widget.storage.addExpense(category.id, amount, desc);
     await reload();
+    if (mounted) showWeeklyOverrunWarning(context, category, over);
   }
 
   Future<void> _openDetail(Category category) async {
@@ -161,12 +197,19 @@ class DashboardScreenState extends State<DashboardScreen> {
             onEdit: _editIncome,
           ),
           const SizedBox(height: 16),
+          WeeklyBudgetCard(
+            budgets: _weeklyBudgets,
+            spending: _week,
+            onEdit: _editWeeklyBudget,
+          ),
+          const SizedBox(height: 16),
           if (_categories.isNotEmpty) ...[
             TotalsCard(totals: budgets),
             const SizedBox(height: 16),
           ],
           ..._categories.map((category) => CategoryCard(
                 category: category,
+                weekSpent: _week.inCategory(category.id),
                 onTap: () => _openDetail(category),
                 onEdit: () => _editCategory(category),
                 onDelete: () => _deleteCategory(category),

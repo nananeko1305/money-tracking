@@ -12,7 +12,7 @@ import 'user_collections.dart';
 import 'user_documents.dart';
 
 /// Turns app models into the Firestore documents of an account. Documents keep
-/// the models' own JSON shape, so backups and migrations need no conversion,
+/// the models' own JSON shape, so the on-phone data moves over unconverted,
 /// and add only what the flat layout needs: the parent id of an entry, the
 /// budget month of an expense and the list position of a fixed cost.
 class AppDataEncoder {
@@ -24,11 +24,15 @@ class AppDataEncoder {
     required String currentMonth,
     required double monthlyIncome,
     required double monthlyIncomeEur,
+    required double weeklyBudget,
+    required double weeklyBudgetEur,
   }) =>
       {
         'currentMonth': currentMonth,
         'monthlyIncome': monthlyIncome,
         'monthlyIncomeEur': monthlyIncomeEur,
+        'weeklyBudget': weeklyBudget,
+        'weeklyBudgetEur': weeklyBudgetEur,
       };
 
   Map<String, dynamic> category(Category c) => c.toJson()
@@ -75,6 +79,8 @@ class AppDataEncoder {
         currentMonth: month,
         monthlyIncome: data.monthlyIncome,
         monthlyIncomeEur: data.monthlyIncomeEur,
+        weeklyBudget: data.weeklyBudget,
+        weeklyBudgetEur: data.weeklyBudgetEur,
       ),
       collections: {
         UserCollections.categoriesName: [

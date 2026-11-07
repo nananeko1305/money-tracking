@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:budget_tracker/models/app_data.dart';
 import 'package:budget_tracker/services/budget_repository.dart';
 import 'package:budget_tracker/services/checklist_repository.dart';
 import 'package:budget_tracker/services/user_collections.dart';
@@ -78,28 +77,12 @@ void main() {
     expect(kept.items.single.done, isTrue);
   });
 
-  test('lists travel with backups; older backups have none', () async {
-    final source = await openFakeSession();
-    final repo = ChecklistRepository(source);
-    final list = await repo.addChecklist('Šoping');
-    await repo.addItem(list.id, 'Patike', 9000);
-    await settle();
-    final exported = await BudgetRepository(source).exportJson();
-
-    final target = await openFakeSession();
-    expect(await BudgetRepository(target).importJson(exported), isTrue);
-    await settle();
-    final restored = (await ChecklistRepository(target).checklists()).single;
-    expect(restored.name, 'Šoping');
-    expect(restored.items.single.amount, 9000);
-
-    final old = await openFakeSession();
-    await BudgetRepository(old).importJson(jsonEncode({
+  test('on-phone data never has lists', () {
+    final data = AppData.fromJson({
       'currentCategories': [],
       'monthlyReports': [],
       'lastResetDate': '2026-09-01T00:00:00.000',
-    }));
-    await settle();
-    expect(await ChecklistRepository(old).checklists(), isEmpty);
+    });
+    expect(data.checklists, isEmpty);
   });
 }

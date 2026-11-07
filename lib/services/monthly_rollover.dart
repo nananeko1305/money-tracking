@@ -5,6 +5,7 @@ import '../models/money_currency.dart';
 import '../models/month_key.dart';
 import '../models/monthly_report.dart';
 import '../models/report_totals.dart';
+import '../models/savings_totals.dart';
 
 /// The monthly reset rule. When the calendar month has advanced past
 /// [AppData.lastResetDate], the previous month is archived as a
@@ -28,8 +29,10 @@ class MonthlyRollover {
     }
 
     final budgets = BudgetTotals.of(data.currentCategories);
-    final saved = sumByCurrency(data.savingsFunds, (f) => f.currency,
-        (f) => f.netInMonth(lastReset));
+    final saved = {
+      for (final t in SavingsTotals.of(data.savingsFunds, lastReset))
+        t.currency: t.thisMonth,
+    };
     final fixed =
         sumByCurrency(data.fixedCosts, (c) => c.currency, (c) => c.amount);
     BudgetTotals? budgetIn(MoneyCurrency c) =>

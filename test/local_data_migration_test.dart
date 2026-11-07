@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:budget_tracker/models/money_currency.dart';
@@ -10,9 +8,9 @@ import 'package:budget_tracker/services/savings_repository.dart';
 import 'fake_account.dart';
 
 void main() {
-  // A backup produced by the Expo app's exportData(): each category carries a
-  // single "legacy" transaction equal to its accumulated spent value.
-  final expoExport = {
+  // The oldest shape the app reads, from the Expo app: each category carries
+  // a single "legacy" transaction equal to its accumulated spent value.
+  final expoData = {
     'currentCategories': [
       {
         'id': '111',
@@ -68,18 +66,17 @@ void main() {
         'savedAt': '2026-09-01T00:00:00.000Z',
       },
     ],
-    // The current month, so the import is not followed by a monthly rollover
-    // that would clear the imported transactions.
+    // The current month, so the move is not followed by a monthly rollover
+    // that would clear the moved transactions.
     'lastResetDate': DateTime.now().toIso8601String(),
   };
 
-  test('Expo backup imports into the account with spent preserved', () async {
+  test('the oldest on-phone data moves to the account with spent preserved',
+      () async {
     final session = await openFakeSession();
     final storage = BudgetRepository(session);
 
-    final ok = await storage.importJson(jsonEncode(expoExport));
-    expect(ok, isTrue);
-    await settle();
+    await moveLocalData(session, expoData);
 
     final categories = await storage.currentCategories();
     expect(categories.length, 2);
@@ -105,7 +102,7 @@ void main() {
     expect(dinars.fixed, 0);
     expect(dinars.saved, 0);
 
-    // Backups from before income, savings and loans existed start without them.
+    // Data from before income, savings and loans existed starts without them.
     expect(await storage.monthlyIncomes(),
         {MoneyCurrency.rsd: 0, MoneyCurrency.eur: 0});
     expect(await SavingsRepository(session).funds(), isEmpty);

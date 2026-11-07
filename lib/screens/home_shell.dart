@@ -15,8 +15,6 @@ import '../services/push_service.dart';
 import '../services/savings_repository.dart';
 import '../services/user_session.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/backup_actions.dart';
-import '../widgets/backup_restore_prompt.dart';
 import '../widgets/change_password_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/load_error_view.dart';
@@ -52,8 +50,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   late final LoanRepository _loans = LoanRepository(widget.session);
   late final ChecklistRepository _checklists =
       ChecklistRepository(widget.session);
-  final BackupActions _backup = BackupActions();
-  final BackupRestorePrompt _restore = BackupRestorePrompt();
   final LocalDataPrompt _localData = LocalDataPrompt();
   final UpdatePrompt _updatePrompt = UpdatePrompt();
   final PushService _push = PushService();
@@ -114,7 +110,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       await _onboarding.markSeen();
     }
     if (!mounted) return;
-    await _offerToFillEmptyAccount();
+    await _offerLocalData();
     if (!mounted) return;
     await _updatePrompt.offer(context);
     // Last, so the notification permission prompt never lands on top of the
@@ -135,15 +131,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   }
 
   /// An account the server confirms is still empty is offered the data this
-  /// phone kept before accounts existed, or else a backup file. Offline the
-  /// cache cannot tell an empty account from an unsynced one, so nothing is
-  /// offered then.
-  Future<void> _offerToFillEmptyAccount() async {
+  /// phone kept before accounts existed. Offline the cache cannot tell an
+  /// empty account from an unsynced one, so nothing is offered then.
+  Future<void> _offerLocalData() async {
     final empty = await _live.isEmptyOnServer();
     if (empty != true || !mounted) return;
-    if (await _localData.offer(context, widget.session)) return;
-    if (!mounted) return;
-    await _restore.offer(context, _storage);
+    await _localData.offer(context, widget.session);
   }
 
   void _select(int i) => setState(() => _index = i);
@@ -177,8 +170,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       drawer: AppDrawer(
         selectedIndex: _index,
         onSelect: _select,
-        onExport: () => _backup.exportData(context, _storage),
-        onImport: () => _backup.importData(context, _storage),
         onHowItWorks: _showOnboarding,
         onChecklists: _openChecklists,
         onShareApp: () => showShareAppDialog(context),

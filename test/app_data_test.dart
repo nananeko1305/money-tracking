@@ -37,10 +37,16 @@ void main() {
           color: '#4ECDC4',
           createdAt: '2026-10-01T00:00:00.000',
           target: 200000,
-          openingBalance: 30000,
+          openingBalances: {MoneyCurrency.rsd: 30000, MoneyCurrency.eur: 200},
           entries: [
             const Transaction(
                 id: 'e', amount: -500, description: 'x', date: '2026-10-02'),
+            const Transaction(
+                id: 'e2',
+                amount: 50,
+                description: '',
+                date: '2026-10-03',
+                currency: MoneyCurrency.eur),
           ],
         ),
       ],
@@ -72,8 +78,11 @@ void main() {
     expect(report.totalsIn(MoneyCurrency.eur).remaining, 180);
     final fund = copy.savingsFunds.single;
     expect(fund.target, 200000);
-    expect(fund.openingBalance, 30000);
-    expect(fund.balance, 29500);
+    expect(fund.openingBalances,
+        {MoneyCurrency.rsd: 30000, MoneyCurrency.eur: 200});
+    expect(fund.balanceIn(MoneyCurrency.rsd), 29500);
+    expect(fund.balanceIn(MoneyCurrency.eur), 250);
+    expect(fund.entries.first.currency, isNull); // the fund's own
     final loan = copy.loans.single;
     expect(loan.direction, LoanDirection.borrowed);
     expect(loan.note, 'kafa');
