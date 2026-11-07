@@ -1,5 +1,6 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,6 +20,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Money Tracking'), findsWidgets);
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     expect(find.text('Dodaj kategoriju'), findsOneWidget);
   });
 }

@@ -13,6 +13,7 @@ AppData _sample() => AppData.fromJson({
           'id': 'c1',
           'name': 'Hrana',
           'budget': 40000,
+          'weeklyLimit': 10000,
           'color': '#FF6B6B',
           'createdAt': '2026-09-01T10:00:00.000',
           'transactions': [
@@ -59,6 +60,7 @@ AppData _sample() => AppData.fromJson({
       ],
       'lastResetDate': '2026-10-01T00:00:00.000',
       'monthlyIncome': 120000,
+      'weeklyBudget': 15000,
       'savingsFunds': [
         {
           'id': 's1',
@@ -111,6 +113,8 @@ void main() {
       'currentMonth': '2026-10',
       'monthlyIncome': 120000,
       'monthlyIncomeEur': 0,
+      'weeklyBudget': 15000,
+      'weeklyBudgetEur': 0,
     });
     expect(docs[UserCollections.expensesName].map((d) => d['month']),
         everyElement('2026-10'));

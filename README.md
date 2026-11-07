@@ -11,6 +11,12 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
   much is allocated to categories, paid in fixed costs or moved to savings,
   what is unallocated and what is left after spending. It carries over to the
   next month.
+- **Weekly budget** — what may be spent in one week (Monday to Sunday) across
+  all categories, in dinars and/or euros, with what is spent and left this week
+  and the days until the next week. Each category can also have its own weekly
+  limit, shown on its card with its own bar. An expense that goes past either
+  is still recorded; the app only warns by how much. A week that began last
+  month also counts last month's expenses (from its report).
 - **Fixed costs** — recurring monthly items (rent, utilities, subscriptions)
   with their amounts and the monthly total; kept across months. They come out
   of the monthly income in full every month.
@@ -31,7 +37,8 @@ Expo/React Native version, which is preserved on the `expo-legacy` branch.
   1st of each month.
 - **Transaction history** — every expense is stored individually (amount,
   description, date); tap a category to see the list, swipe left to delete.
-- **Category editing** — edit button to change a category's name and budget.
+- **Category editing** — edit button to change a category's name, budget and
+  weekly limit.
 - **Update notifications** — every new release sends a push notification
   (Firebase Cloud Messaging); tapping it offers the APK download.
 - **Share the app** — from the drawer: a QR code (and a copyable link) to the

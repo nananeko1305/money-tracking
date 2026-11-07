@@ -85,6 +85,9 @@ class AppDataDecoder {
       monthlyIncome: (profile?['monthlyIncome'] as num?)?.toDouble() ?? 0,
       monthlyIncomeEur:
           (profile?['monthlyIncomeEur'] as num?)?.toDouble() ?? 0,
+      weeklyBudget: (profile?['weeklyBudget'] as num?)?.toDouble() ?? 0,
+      weeklyBudgetEur:
+          (profile?['weeklyBudgetEur'] as num?)?.toDouble() ?? 0,
       savingsFunds: funds,
       loans: loans,
       checklists: checklists,

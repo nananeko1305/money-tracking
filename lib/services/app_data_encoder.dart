@@ -24,11 +24,15 @@ class AppDataEncoder {
     required String currentMonth,
     required double monthlyIncome,
     required double monthlyIncomeEur,
+    required double weeklyBudget,
+    required double weeklyBudgetEur,
   }) =>
       {
         'currentMonth': currentMonth,
         'monthlyIncome': monthlyIncome,
         'monthlyIncomeEur': monthlyIncomeEur,
+        'weeklyBudget': weeklyBudget,
+        'weeklyBudgetEur': weeklyBudgetEur,
       };
 
   Map<String, dynamic> category(Category c) => c.toJson()
@@ -75,6 +79,8 @@ class AppDataEncoder {
         currentMonth: month,
         monthlyIncome: data.monthlyIncome,
         monthlyIncomeEur: data.monthlyIncomeEur,
+        weeklyBudget: data.weeklyBudget,
+        weeklyBudgetEur: data.weeklyBudgetEur,
       ),
       collections: {
         UserCollections.categoriesName: [

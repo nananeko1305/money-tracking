@@ -6,11 +6,13 @@ import 'loan_strings_sr.dart';
 import 'savings_strings_sr.dart';
 import 'share_strings_sr.dart';
 import 'strings.dart';
+import 'weekly_strings_sr.dart';
 
 /// Serbian (Latin) translations.
 class StringsSr extends AppStrings
     with
         IncomeStringsSr,
+        WeeklyStringsSr,
         FixedCostStringsSr,
         SavingsStringsSr,
         LoanStringsSr,

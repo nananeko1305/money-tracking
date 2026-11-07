@@ -5,11 +5,16 @@ import '../l10n/amount_input.dart';
 import '../models/category.dart';
 import '../theme.dart';
 import 'amount_row.dart';
+import 'category_week_row.dart';
 
-/// A single category card on the dashboard: budget summary, progress bar and an
-/// inline expense entry field.
+/// A single category card on the dashboard: budget summary, progress bar, the
+/// week against its weekly limit (when it has one) and an inline expense
+/// entry field.
 class CategoryCard extends StatefulWidget {
   final Category category;
+
+  /// What the category has spent this week.
+  final double weekSpent;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -18,6 +23,7 @@ class CategoryCard extends StatefulWidget {
   const CategoryCard({
     super.key,
     required this.category,
+    this.weekSpent = 0,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
@@ -137,6 +143,15 @@ class _CategoryCardState extends State<CategoryCard> {
               valueColor: AlwaysStoppedAnimation(barColor),
             ),
           ),
+          if (category.weeklyLimit > 0) ...[
+            const SizedBox(height: 12),
+            CategoryWeekRow(
+              spent: widget.weekSpent,
+              limit: category.weeklyLimit,
+              currency: category.currency,
+              color: color,
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [

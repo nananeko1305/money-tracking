@@ -22,6 +22,8 @@ void main() {
       'currentMonth': '2026-09',
       'monthlyIncome': 0,
       'monthlyIncomeEur': 0,
+      'weeklyBudget': 0,
+      'weeklyBudgetEur': 0,
     });
   });
 

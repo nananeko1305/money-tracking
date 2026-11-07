@@ -6,11 +6,13 @@ import 'loan_strings_en.dart';
 import 'savings_strings_en.dart';
 import 'share_strings_en.dart';
 import 'strings.dart';
+import 'weekly_strings_en.dart';
 
 /// English translations.
 class StringsEn extends AppStrings
     with
         IncomeStringsEn,
+        WeeklyStringsEn,
         FixedCostStringsEn,
         SavingsStringsEn,
         LoanStringsEn,

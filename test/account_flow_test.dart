@@ -42,6 +42,9 @@ void main() {
         findsOneWidget);
 
     await signIn(tester);
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     expect(find.text('Dodaj kategoriju'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.menu));
@@ -118,6 +121,9 @@ void main() {
 
     expect(find.text('Prenesi podatke na nalog'), findsOneWidget);
     await tapText(tester, 'Prenesi');
+    await tester.dragUntilVisible(find.text('Stara kategorija'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     expect(find.text('Stara kategorija'), findsOneWidget);
     expect(await tester.runAsync(() => LegacyLocalData().pending()), isNull);
     // Moving never deletes or rewrites what is on the phone.
@@ -135,6 +141,9 @@ void main() {
     await tester.pumpAndSettle();
 
     await tapText(tester, 'Ne sada');
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     expect(find.text('Dodaj kategoriju'), findsOneWidget);
     expect(await legacyOnPhone(tester), legacyBlob);
     expect(await tester.runAsync(() => LegacyLocalData().pending()), isNotNull);
