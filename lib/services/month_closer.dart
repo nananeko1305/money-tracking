@@ -53,7 +53,12 @@ class MonthCloser {
         _startedAccount = true;
         _writes.track(_docs.profile.set(
           _encoder.profile(
-              currentMonth: current, monthlyIncome: 0, monthlyIncomeEur: 0),
+            currentMonth: current,
+            monthlyIncome: 0,
+            monthlyIncomeEur: 0,
+            weeklyBudget: 0,
+            weeklyBudgetEur: 0,
+          ),
           SetOptions(merge: true),
         ));
       }

@@ -7,6 +7,10 @@ class Category {
   final String id;
   String name;
   double budget;
+
+  /// What the category may spend in one week (Monday to Sunday); 0 means it
+  /// has no weekly limit.
+  double weeklyLimit;
   final String color;
   final String createdAt; // ISO date string
   MoneyCurrency currency;
@@ -16,6 +20,7 @@ class Category {
     required this.id,
     required this.name,
     required this.budget,
+    this.weeklyLimit = 0,
     required this.color,
     required this.createdAt,
     this.currency = MoneyCurrency.rsd,
@@ -35,6 +40,8 @@ class Category {
         id: json['id'] as String,
         name: json['name'] as String,
         budget: (json['budget'] as num).toDouble(),
+        // Absent in categories made before weekly limits existed.
+        weeklyLimit: (json['weeklyLimit'] as num?)?.toDouble() ?? 0,
         color: json['color'] as String,
         createdAt: json['createdAt'] as String,
         currency: MoneyCurrency.fromName(json['currency'] as String?),
@@ -48,6 +55,7 @@ class Category {
         'id': id,
         'name': name,
         'budget': budget,
+        'weeklyLimit': weeklyLimit,
         'spent': spent, // stored for report snapshots / interop
         'color': color,
         'createdAt': createdAt,
@@ -59,6 +67,7 @@ class Category {
         id: id,
         name: name,
         budget: budget,
+        weeklyLimit: weeklyLimit,
         color: color,
         createdAt: createdAt,
         currency: currency,

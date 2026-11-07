@@ -4,11 +4,15 @@ import '../app_scope.dart';
 import '../l10n/amount_input.dart';
 import '../models/money_currency.dart';
 
-/// Asks for the monthly income in dinars and in euros, both optional (empty
-/// means 0, which clears it). Returns null if the dialog was dismissed.
-/// [current] prefills the fields.
-Future<Map<MoneyCurrency, double>?> showIncomeDialog(
+/// Asks for one amount in dinars and one in euros, both optional (empty
+/// means 0, which clears it): the monthly income, the weekly budget.
+/// Returns null if the dialog was dismissed. [current] prefills the fields;
+/// [hint] and [help] go on the dinar field.
+Future<Map<MoneyCurrency, double>?> showCurrencyAmountsDialog(
   BuildContext context, {
+  required String title,
+  required String hint,
+  required String help,
   Map<MoneyCurrency, double> current = const {},
 }) {
   final t = AppScope.of(context).strings;
@@ -21,7 +25,7 @@ Future<Map<MoneyCurrency, double>?> showIncomeDialog(
   return showDialog<Map<MoneyCurrency, double>>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(t.monthlyIncome),
+      title: Text(title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -34,8 +38,8 @@ Future<Map<MoneyCurrency, double>?> showIncomeDialog(
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: c == MoneyCurrency.rsd ? t.dinars : t.euros,
-                hintText: c == MoneyCurrency.rsd ? t.incomeHint : null,
-                helperText: i == 0 ? t.incomeHelp : null,
+                hintText: c == MoneyCurrency.rsd ? hint : null,
+                helperText: i == 0 ? help : null,
                 suffixText: t.currencySymbol(c),
               ),
             ),
@@ -49,20 +53,20 @@ Future<Map<MoneyCurrency, double>?> showIncomeDialog(
         ),
         FilledButton(
           onPressed: () {
-            final incomes = <MoneyCurrency, double>{};
+            final amounts = <MoneyCurrency, double>{};
             for (final MapEntry(key: c, value: controller)
                 in controllers.entries) {
               final text = controller.text.trim();
-              final income = text.isEmpty ? 0.0 : parseAmountInput(text);
-              if (income == null || income < 0) {
+              final amount = text.isEmpty ? 0.0 : parseAmountInput(text);
+              if (amount == null || amount < 0) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   SnackBar(content: Text(t.invalidAmount)),
                 );
                 return;
               }
-              incomes[c] = income;
+              amounts[c] = amount;
             }
-            Navigator.pop(ctx, incomes);
+            Navigator.pop(ctx, amounts);
           },
           child: Text(t.save),
         ),

@@ -64,10 +64,12 @@ void main() {
     expect(find.text('90.000 din'), findsNWidgets(2)); // unallocated, left
 
     // A category budget is allocated out of the income.
+    await tester.dragUntilVisible(find.text('Dodaj kategoriju'),
+        find.byType(ListView).hitTestable().first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     await tapText(tester, 'Dodaj kategoriju');
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(fields.evaluate().length - 2), 'Hrana');
-    await tester.enterText(fields.last, '40000');
+    await tester.enterText(find.widgetWithText(TextField, 'Naziv'), 'Hrana');
+    await tester.enterText(find.widgetWithText(TextField, 'Budžet'), '40000');
     await tapText(tester, 'Sačuvaj');
     expect(find.text('50.000 din'), findsOneWidget); // unallocated
   });
@@ -87,9 +89,8 @@ void main() {
         find.byType(ListView).hitTestable().first, const Offset(0, -300));
     await tester.pumpAndSettle();
     await tapText(tester, 'Dodaj kategoriju');
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(fields.evaluate().length - 2), 'More');
-    await tester.enterText(fields.last, '500');
+    await tester.enterText(find.widgetWithText(TextField, 'Naziv'), 'More');
+    await tester.enterText(find.widgetWithText(TextField, 'Budžet'), '500');
     await tapText(tester, 'Evri');
     await tapText(tester, 'Sačuvaj');
     expect(find.text('120.000 din'), findsNWidgets(3)); // dinars untouched

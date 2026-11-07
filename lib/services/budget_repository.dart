@@ -6,6 +6,7 @@ import '../models/category.dart';
 import '../models/money_currency.dart';
 import '../models/monthly_report.dart';
 import '../models/transaction.dart';
+import '../models/weekly_spending.dart';
 import 'app_data_encoder.dart';
 import 'batch_commits.dart';
 import 'category_palette.dart';
@@ -68,15 +69,40 @@ class BudgetRepository {
         SetOptions(merge: true),
       ));
 
+  /// What may be spent in one week (Monday to Sunday) in each currency, over
+  /// all categories. 0 means it has not been set.
+  Future<Map<MoneyCurrency, double>> weeklyBudgets() async {
+    final data = await _data();
+    return {for (final c in MoneyCurrency.values) c: data.weeklyBudgetIn(c)};
+  }
+
+  /// Sets the weekly budget in dinars and in euros; 0 clears one. It holds
+  /// every week until it is changed.
+  Future<void> setWeeklyBudget({required double rsd, required double eur}) async =>
+      _write(_docs.profile.set(
+        {'weeklyBudget': rsd, 'weeklyBudgetEur': eur},
+        SetOptions(merge: true),
+      ));
+
+  /// What has been spent so far this week, per category and per currency.
+  Future<WeeklySpending> weeklySpending() async {
+    final data = await _data();
+    return WeeklySpending.of(data.currentCategories, data.monthlyReports,
+        now: DateTime.now());
+  }
+
+  /// [weeklyLimit] 0 means the category has no weekly limit.
   Future<Category> addCategory(
     String name,
     double budget, {
     MoneyCurrency currency = MoneyCurrency.rsd,
+    double weeklyLimit = 0,
   }) async {
     final category = Category(
       id: _ids.next(),
       name: name,
       budget: budget,
+      weeklyLimit: weeklyLimit,
       currency: currency,
       color: _palette.randomColor(),
       createdAt: DateTime.now().toIso8601String(),
@@ -85,12 +111,17 @@ class BudgetRepository {
     return category;
   }
 
-  /// Changing the currency moves the category's expenses with it.
+  /// Changing the currency moves the category's expenses with it. A
+  /// [weeklyLimit] of 0 removes the weekly limit.
   Future<void> updateCategory(String id,
-      {String? name, double? budget, MoneyCurrency? currency}) async {
+      {String? name,
+      double? budget,
+      double? weeklyLimit,
+      MoneyCurrency? currency}) async {
     _write(_docs.categories.doc(id).update({
       'name': ?name,
       'budget': ?budget,
+      'weeklyLimit': ?weeklyLimit,
       if (currency != null) 'currency': currency.name,
     }));
   }
